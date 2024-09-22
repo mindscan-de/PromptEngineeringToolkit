@@ -33,24 +33,41 @@ st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
 
 # WE do want to initialize the UI if session is not properly initialized 
 
+## ----------------------------
+## Prompt Engineering Tabs
+## ----------------------------
 
 def render_prompt_engineer_tab(tab):
     with tab:
         engneer_tab, ai_templates_tab, ai_tasks_tab, prompts_result_viewer_tab = st.tabs(['Engineering', 'AI-Templates', 'AI-Tasks', 'Result-Viewer'])
+        
+        
+## ----------------------------
+## Workflow and Agents Tabs
+## ----------------------------
 
 def render_workflow_agent_engineer_tab(tab):
     with tab:
         workflow_tab, agent_tab = st.tabs(['LLM Worflows', 'LLM Agents'])
+        
+        ## Cuurently i don't know too much, what can be done here, but i am convinced that the AI_Tasks mus be defined first.
+## ----------------------------
+## MultipleConfigurations and Setting-tabs
+## ----------------------------
 
 def render_settings_tab(tab):
     with tab:
         api_types_tab, model_tab, endpoints_tab, llm_tasks_tab, general_tab = st.tabs(["API-Types", "Models", "Endpoints", "LLM-Tasks", "Misc"])
-        
         # render api_tyes_tab
         # render model_tab
         # render endpoints_tab
         # render llm tasks (code completion, QA, QA with pretext) 
         # render general_tab
+        
+        
+## ----------------------------
+## Main UI
+## ---------------------------- 
 
 prompt_enginener_tab, workflow_engineer_tab, settings_tab = st.tabs(['LLM Prompt Engineer','LLM Workflow & Agent Engineer','Settings'])
 
