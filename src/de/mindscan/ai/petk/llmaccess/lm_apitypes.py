@@ -26,14 +26,15 @@ SOFTWARE.
 @author: Maxim Gansert
 
 '''
+from de.mindscan.ai.petk.llmaccess.apitypes import OobaBoogaWebUIv1API
 
-OobaBoogaWebUIv1API = {}
-HuggingfaceTextGenerationInferenceAPI = {} 
+__OobaBoogaWebUIv1API = OobaBoogaWebUIv1API.OobaBoogaWebUIv1API(None)
+__HuggingfaceTextGenerationInferenceAPI = {} 
 
 def get_RemoteApiTypes():
     remote_api_types = {
-            'OobaBoogaWebUIv1API': OobaBoogaWebUIv1API,
-            'HuggingFaceTextGenerationInferenceAPI': HuggingfaceTextGenerationInferenceAPI
+            'OobaBoogaWebUIv1API': __OobaBoogaWebUIv1API,
+            'HuggingFaceTextGenerationInferenceAPI': __HuggingfaceTextGenerationInferenceAPI
         }
 
     return remote_api_types
