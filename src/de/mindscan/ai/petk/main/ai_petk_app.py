@@ -63,9 +63,15 @@ def render_api_types_tab(tab):
         selection_container, apitype_data_container = st.columns([0.25,0.75])
         with selection_container:
             settings_apitypes_selected_apitype = st.selectbox("Select Remote-API-Type", apitypes.keys(),key="settings.apitypes.selected_apitype")
+            st.write("TODO: maybe allow for a create button")
         with apitype_data_container:
             st.write(settings_apitypes_selected_apitype)
             st.write(apitypes[settings_apitypes_selected_apitype])
+            st.write("TODO: show json api template, ")
+            st.write("TODO: show api name")
+            st.write("TODO: show api identifier")
+            st.write("TODO: show json path queries for answers")
+            st.write("TODO: translateFinishReason")
         
         st.write("TODO: show apitype selection")
         st.write("TODO: maintain the current configuration in a kind of global Object, which can be updated and keeps the UI state in case or a reload.")
