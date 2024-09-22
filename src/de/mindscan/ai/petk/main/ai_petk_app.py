@@ -28,7 +28,9 @@ SOFTWARE.
 
 import streamlit as st
 
-# Set the widemode first
+from de.mindscan.ai.petk.llmaccess.lm_apitypes import get_RemoteApiTypes
+
+# Set the wide mode and application name
 st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
 
 # WE do want to initialize the UI if session is not properly initialized 
@@ -55,9 +57,25 @@ def render_workflow_agent_engineer_tab(tab):
 ## MultipleConfigurations and Setting-tabs
 ## ----------------------------
 
+def render_api_types_tab(tab):
+    with tab:
+        apitypes = get_RemoteApiTypes()
+        selection_container, apitype_data_container = st.columns([0.25,0.75])
+        with selection_container:
+            settings_apitypes_selected_apitype = st.selectbox("Select Remote-API-Type", apitypes.keys(),key="settings.apitypes.selected_apitype")
+        with apitype_data_container:
+            st.write(settings_apitypes_selected_apitype)
+            st.write(apitypes[settings_apitypes_selected_apitype])
+        
+        st.write("TODO: show apitype selection")
+        st.write("TODO: maintain the current configuration in a kind of global Object, which can be updated and keeps the UI state in case or a reload.")
+        st.write("TODO: track current selection, such that the configuration of zhis APIType can be implemented")
+
 def render_settings_tab(tab):
     with tab:
         api_types_tab, model_tab, endpoints_tab, llm_tasks_tab, general_tab = st.tabs(["API-Types", "Models", "Endpoints", "LLM-Tasks", "Misc"])
+        
+        render_api_types_tab(api_types_tab)
         # render api_tyes_tab
         # render model_tab
         # render endpoints_tab
@@ -69,8 +87,8 @@ def render_settings_tab(tab):
 ## Main UI
 ## ---------------------------- 
 
-prompt_enginener_tab, workflow_engineer_tab, settings_tab = st.tabs(['LLM Prompt Engineer','LLM Workflow & Agent Engineer','Settings'])
+prompt_enginener_tab, workflow_agent_engineer_tab, settings_tab = st.tabs(['LLM Prompt Engineer','LLM Workflow & Agent Engineer','Settings'])
 
 render_prompt_engineer_tab(prompt_enginener_tab)
-render_workflow_agent_engineer_tab(workflow_engineer_tab)
+render_workflow_agent_engineer_tab(workflow_agent_engineer_tab)
 render_settings_tab(settings_tab)
