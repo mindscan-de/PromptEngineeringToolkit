@@ -4,6 +4,8 @@ Created on 22.09.2024
 @author: JohnDoe
 '''
 
+import os
+
 class APIType(object):
     '''
     classdocs
@@ -19,7 +21,13 @@ class APIType(object):
         self.__json_api_template = self._loadTemplate(json_api_template_filename)
         
     def _loadTemplate(self, template_file_name):
-        pass
+        json_api_template = "unresolved file '"+str(template_file_name)+"'"
+        path=os.path.join("../llmaccess/apitypes/",template_file_name)
+        is_file = os.path.isfile(path)
+        if is_file:
+            with open(path,"r") as f:
+                json_api_template = str(f.read())
+        return json_api_template
     
     def getJsonApiTemplate(self):
         return self.__json_api_template

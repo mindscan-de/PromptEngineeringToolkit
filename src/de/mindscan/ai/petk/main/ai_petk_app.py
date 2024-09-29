@@ -27,6 +27,7 @@ SOFTWARE.
 '''
 
 import streamlit as st
+import os
 
 from de.mindscan.ai.petk.llmaccess.lm_apitypes import get_RemoteApiTypes
 
@@ -62,14 +63,17 @@ def render_api_types_tab(tab):
         apitypes = get_RemoteApiTypes()
         selection_container, apitype_data_container = st.columns([0.25,0.75])
         with selection_container:
-            settings_apitypes_selected_apitype = st.selectbox("Select Remote-API-Type", apitypes.keys(),key="settings.apitypes.selected_apitype")
+            settings_apitypes_selected_apitype = st.selectbox("Select Remote-API-Type", apitypes.keys(),key="settings.apitypes.selected_api.type")
             st.write("TODO: maybe allow for a create button")
         with apitype_data_container:
+            current_selected_api_type = apitypes[settings_apitypes_selected_apitype]
+            current_api_name = current_selected_api_type.getApiName()
+            
             st.write(settings_apitypes_selected_apitype)
-            st.write(apitypes[settings_apitypes_selected_apitype])
-            st.write("TODO: show json api template, ")
-            st.write("TODO: show api name")
-            st.write("TODO: show api identifier")
+            ## st.write(current_selected_api_type)
+            st.code(body=current_selected_api_type.getJsonApiTemplate(), language="json", line_numbers=False)
+            st.text_input("API-Name", value=current_api_name, disabled=True, key="settings.apitype.["+current_api_name+"].api.name")            
+            st.text_input("API-Identifier", value=current_selected_api_type.getApiIndentifier(),disabled=True, key="settings.apitype.["+current_api_name+"].api.identifier")
             st.write("TODO: show json path queries for answers")
             st.write("TODO: translateFinishReason")
         
