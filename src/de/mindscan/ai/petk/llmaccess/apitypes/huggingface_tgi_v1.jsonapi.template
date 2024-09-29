@@ -1,0 +1,24 @@
+{
+  "inputs": {{{#quoteAsJsonString:llm.query}}},
+  "parameters": { 
+    "best_of": 1,
+    "decoder_input_details": true,
+    "details": true,
+    "do_sample": true,
+    "max_new_tokens": 1024,
+    "repetition_penalty": 1.03,
+    "return_full_text": false,
+    "seed": null,
+    "stop": [
+        "photographer"
+    ],
+    "temperature": 0.2,
+    "top_k": 10,
+    "top_n_tokens": 5,
+    "top_p": 0.95,
+    "truncate": null,
+    "typical_p": 0.95,
+    "watermark": false
+  },
+  "stream": false
+}
