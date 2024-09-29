@@ -14,5 +14,13 @@ class OobaBoogaWebUIv1API(APIType):
         '''
         Constructor
         '''
-        super().__init__("", "oobabooga-text-webui-api-v1", "uuid of'oobabooga-text-webui-api-v1'")
-        
+        super().__init__("oobabooga_webui_v1.jsonapi.template", "oobabooga-text-webui-api-v1", "uuid of'oobabooga-text-webui-api-v1'")
+
+
+    def getJsonPathQueriesForAnswers(self):
+        return {
+                "llm.response.content" : "/results/0/text"
+            }
+    
+    def translateFinishReason(self, reason:str):
+        return "NONE"
