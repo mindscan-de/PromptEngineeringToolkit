@@ -68,12 +68,9 @@ def render_api_types_tab(tab):
         with apitype_data_container:
             current_selected_api_type = apitypes[settings_apitypes_selected_apitype]
             current_api_name = current_selected_api_type.getApiName()
-            
-            st.write(settings_apitypes_selected_apitype)
-            ## st.write(current_selected_api_type)
-            st.code(body=current_selected_api_type.getJsonApiTemplate(), language="json", line_numbers=False)
             st.text_input("API-Name", value=current_api_name, disabled=True, key="settings.apitype.["+current_api_name+"].api.name")            
             st.text_input("API-Identifier", value=current_selected_api_type.getApiIndentifier(),disabled=True, key="settings.apitype.["+current_api_name+"].api.identifier")
+            st.code(body=current_selected_api_type.getJsonApiTemplate(), language="json", line_numbers=False)
             st.write("TODO: show json path queries for answers")
             st.write("TODO: translateFinishReason")
         
