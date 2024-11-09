@@ -208,7 +208,10 @@ def render_api_types_tab(tab):
             st.text_input("API-Name", value=current_api_name, disabled=True, key="settings.apitype.["+current_api_name+"].api.name")            
             st.text_input("API-Identifier", value=current_selected_api_type.getApiIndentifier(),disabled=True, key="settings.apitype.["+current_api_name+"].api.identifier")
             st.code(body=current_selected_api_type.getJsonApiTemplate(), language="json", line_numbers=False)
-            st.write("TODO: show json path queries for answers")
+            
+            st.write("json path answers")
+            st.write(current_selected_api_type.getJsonPathQueriesForAnswers())
+            
             st.write("TODO: translateFinishReason")
         
         st.write("TODO: maintain the current configuration in a kind of global Object, which can be updated and keeps the UI state in case or a reload.")
