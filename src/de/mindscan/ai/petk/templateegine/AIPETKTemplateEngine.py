@@ -10,6 +10,7 @@ class AIPETKTemplateEngine(object):
     '''
     classdocs
     '''
+    
     FUN_QUOTEASJSON_STRING = "quoteAsJsonString"
     FUN_TO_FIRST_UPPER = "toFirstUpper"
 
@@ -98,11 +99,11 @@ class AIPETKTemplateEngine(object):
                     builder.extend(["u00", AIPETKTemplateEngine.toHEX[(ord(c) >> 4) & 0x1],
                                    AIPETKTemplateEngine.toHEX[(ord(c)) & 0xF]])
             elif ord(c) >= 0xD800 and ord(c) <= 0xDFFF:
-                builder.append("\\u")
-                builder.extend([AIPETKTemplateEngine.toHEX[(ord(c) >> 12) & 0xf],
-                               AIPETKTemplateEngine.toHEX[(ord(c) >> 8) & 0xf],
-                               AIPETKTemplateEngine.toHEX[(ord(c) >> 4) & 0xf],
-                               AIPETKTemplateEngine.toHEX[(ord(c)) & 0xf]])
+                builder.extend(["\\u",
+                                AIPETKTemplateEngine.toHEX[(ord(c) >> 12) & 0xf],
+                                AIPETKTemplateEngine.toHEX[(ord(c) >> 8) & 0xf],
+                                AIPETKTemplateEngine.toHEX[(ord(c) >> 4) & 0xf],
+                                AIPETKTemplateEngine.toHEX[(ord(c)) & 0xf]])
             else:
                 builder.append(c)
                 
