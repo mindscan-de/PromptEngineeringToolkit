@@ -34,6 +34,7 @@ from encodings.base64_codec import base64_decode
 from de.mindscan.ai.petk.llmaccess.lm_connection_endpoints import getConnectionEndpoints
 from de.mindscan.ai.petk.llmaccess.ConnectionEndpoint import ConnectionEndpoint
 from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
+from de.mindscan.ai.petk.llmaccess.RemoteApiModelInvoker import RemoteApiModelInvoker
 
 # Set the wide mode and application name
 st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
@@ -226,11 +227,12 @@ def render_settings_tab(tab):
         
 def render_simple_invokder_test_tab(tab):
     with tab:
-        json_api_template = get_RemoteApiTypes()['OobaBoogaWebUIv1API'].getJsonApiTemplate();
+        invoker = RemoteApiModelInvoker(None)
         
-        template_engine = AIPETKTemplateEngine(None)
+        endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
+        structure = invoker.build_json_request_structure(endpoint, 'this is my test for the llm.query parameter "we have this string inside"')
         
-        st.code(template_engine.evaluateTemplate(json_api_template, {'llm.query':'this is my test for the llm.query parameter "we have this string inside"'}))
+        st.code(structure)
         pass
         
 ## ----------------------------
