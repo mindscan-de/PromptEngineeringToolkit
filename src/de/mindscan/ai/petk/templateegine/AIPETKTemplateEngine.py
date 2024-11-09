@@ -11,7 +11,7 @@ class AIPETKTemplateEngine(object):
     classdocs
     '''
     
-    FUN_QUOTEASJSON_STRING = "quoteAsJsonString"
+    FUN_QUOTE_AS_JSON_STRING = "quoteAsJsonString"
     FUN_TO_FIRST_UPPER = "toFirstUpper"
 
     REPLACEMENT_IF_FUNCTION_UNKNOWN = 'UNKNOWN_FUNCTION'
@@ -51,7 +51,7 @@ class AIPETKTemplateEngine(object):
         
         pass
     
-    def evaluateSelector(self, selector, value_map):
+    def evaluate_selector(self, selector, value_map):
         if ':' in selector:
             function_selector = selector.split(':', 2)
             switch = {
