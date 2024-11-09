@@ -24,21 +24,6 @@ class RemoteApiModelInvoker(object):
         self.template_engine = AIPETKTemplateEngine(None)
         
 
-    def extract_from_json_map(self, json_path_queries_for_answers, json_answer):
-        result = {}
-        for key, json_path in json_path_queries_for_answers.items():
-            st.write("KEY  " + key)
-            st.write("path:" + json_path)
-            
-            expression = parse(json_path)
-            for match in expression.find(json_answer):
-                st.write(dir(match))
-                st.write("match: '" + str(match) +"'")
-                result[key] = match.value
-        
-        return result
-    
-    
     def invoke_backend(self, endpoint:ConnectionEndpoint, fully_prepared_llm_query:str):
         completedJsonRequestStructure:str = self.build_json_request_structure(endpoint, fully_prepared_llm_query)
         endpointURL = endpoint.endpoint_url
@@ -61,7 +46,8 @@ class RemoteApiModelInvoker(object):
         answer_map = self.extract_from_json_map(endpoint.remote_api_type.getJsonPathQueriesForAnswers(), json_answer)
         
         return answer_map
-        
+
+    
     def build_json_request_structure(self, endpoint:ConnectionEndpoint, fully_prepared_llm_query:str) -> str:
         json_api_template:str = endpoint.remote_api_type.getJsonApiTemplate();
         
@@ -71,4 +57,15 @@ class RemoteApiModelInvoker(object):
             }
         
         return self.template_engine.evaluateTemplate(json_api_template, json_api_values)
+
+    
+    def extract_from_json_map(self, json_path_queries_for_answers, json_answer):
+        result = {}
+        for key, json_path in json_path_queries_for_answers.items():
+            expression = parse(json_path)
+            for match in expression.find(json_answer):
+                result[key] = match.value
+        
+        return result
+    
     
