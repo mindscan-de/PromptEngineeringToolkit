@@ -41,6 +41,7 @@ class RemoteApiModelInvoker(object):
             return {}
         
         json_answer = json.loads(response.text)
+        st.write(json_answer)
         
         ## TODO: extract unified data from json answer...
         answer_map = self.extract_from_json_map(endpoint.remote_api_type.getJsonPathQueriesForAnswers(), json_answer)
