@@ -16,3 +16,13 @@ class HuggingfaceTGIv1API(APIType):
         Constructor
         '''
         super().__init__("huggingface_tgi_v1.jsonapi.template", "huggingface-tgi-api-v1", "uuid of 'huggingface-tgi-api-v1'")
+        
+        
+    def getJsonPathQueriesForAnswers(self):
+        return {
+                "llm.response.content" : '$.generated_text',
+                "llm.response.finish.reason" : '$.details.finish_reason',
+                "llm.response.number.generated.tokens" : '$.details.generated_tokens',
+                "llm.response.seed" : '$.details.seed'
+            }
+        
