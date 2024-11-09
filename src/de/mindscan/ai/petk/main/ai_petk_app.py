@@ -230,9 +230,12 @@ def render_simple_invokder_test_tab(tab):
         invoker = RemoteApiModelInvoker(None)
         
         endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
-        structure = invoker.build_json_request_structure(endpoint, 'this is my test for the llm.query parameter "we have this string inside"')
+        structure = invoker.invoke_backend(endpoint, """how to send a http post request in python?
+
+```python
+""")
         
-        st.code(structure)
+        st.write(structure)
         pass
         
 ## ----------------------------

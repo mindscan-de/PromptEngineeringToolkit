@@ -19,7 +19,7 @@ class OobaBoogaWebUIv1API(APIType):
 
     def getJsonPathQueriesForAnswers(self):
         return {
-                "llm.response.content" : "/results/0/text"
+                "llm.response.content" : '$.results[0].text'
             }
     
     def translateFinishReason(self, reason:str):
