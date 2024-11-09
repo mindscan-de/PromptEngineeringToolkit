@@ -30,6 +30,10 @@ import streamlit as st
 import os
 
 from de.mindscan.ai.petk.llmaccess.lm_apitypes import get_RemoteApiTypes
+from encodings.base64_codec import base64_decode
+from de.mindscan.ai.petk.llmaccess.lm_connection_endpoints import getConnectionEndpoints
+from de.mindscan.ai.petk.llmaccess.ConnectionEndpoint import ConnectionEndpoint
+from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
 
 # Set the wide mode and application name
 st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
@@ -40,10 +44,142 @@ st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
 ## Prompt Engineering Tabs
 ## ----------------------------
 
+def render_ai_templates_tab(tab):
+    with tab:
+        ideas ={
+                'unittest': ['generate java4 unit test from code/complete the unit tests'],
+                'refactor': [
+                    'simplify_code',
+                    'improve_variable_names',
+                    'split_method',
+                    'performance_optimize_code'
+                    ],
+                'reengineer': [
+                    ],
+                # output as json
+                'architect': [
+                    'TODO SYSTEMPROMPT',
+                    'collect, suggest and list technologies read from specification', 
+                    'do a systemprompt for architecture',
+                    'select an architectural template from a list of templates ',
+                    'configure a project'
+                    ],
+                'bug-hunter': [
+                    'TODO SYSTEMPROMPT',
+                    'bug_found_or_add_logs',
+                    'get_bug_reproduction_instructions',
+                    'iteration',
+                    'log_data',
+                    ],
+                'coder': [
+                    'TODO SYSTEMPROMPT',
+                    'breakdown',
+                    'describe_file',
+                    'implement_changes',
+                    'iteration',
+                    '(apply_)review_feedback'
+                    ],
+                'code-reviewer': [
+                    "TODO SYSTEMPROMPT",
+                    'breakdown',
+                    'review_changes',
+                    ],
+                'developer': [
+                    "TODO SYSTEMPROMPT",
+                    "breakdown",
+                    "filter_files",
+                    "filter files_loop"
+                    "iteration",
+                    "parse_task",
+                    ],
+                "error-handler": [
+                    "debug"
+                    ],
+                "executor": [
+                    "ran_command", # contains/parses the result of an execution provide data as json
+                    ],
+                "external-docs": [
+                    "TODO SYSTEMPROMPT",
+                    "create-doc_queries",
+                    "select-docset"
+                    ],
+                "importer": [],
+                "partials": [
+                    "coding_rules",
+                    "doc_snippets",
+                    "execution_order",
+                    "features_list",
+                    "file_naming",
+                    "file_size_limit",
+                    "files_descriptions",
+                    "files_list",
+                    "files_list_relevant",
+                    "filter_files_actions",
+                    "human_intervention_explanation",
+                    "project_details",
+                    "projectr_tasks",
+                    "relative_paths",
+                    "user_feedback",
+                    ],
+                "problem-solver": [
+                    "TODO SYSTEMPROMPT",
+                    "get_alternative_solution",
+                    "iteration"
+                    ],
+                "spec-writer": [
+                    "TODO SYSTEMPROMPT",
+                    "add_new_feature",
+                    "ask_questions",
+                    "prompt_complexity",
+                    "review_spec"
+                    ],
+                "task-reviewer": [
+                    "TODO SYSTEMPROMPT",
+                    "review_task"
+                    ],
+                "tech_lead": [
+                    "TODO SYSTEMPROMPT",
+                    "plan",
+                    "update_plan",
+                    ],
+                "tech-writer": [
+                    "TODO SYSTEMPROMPT",
+                    "create readme"
+                    ],
+                "trouble-shooter": [
+                    "TODO SYSTEMPROMPT",
+                    "breakdown",
+                    "bug_report",
+                    "define_user_review_goal",
+                    "filter_files",
+                    "filter_files_loop",
+                    "get_route_files",
+                    "get run_command",
+                    "iteration"
+                    ],
+                
+                "refactor": [
+                    "TODO SYSTEMPROMPT",
+                    "rewrite code from java to python",
+                    "rewrite code from python to java"
+                    ],
+                
+                "screenwriter/director": [
+                    "TODO SYSTEMPROMPT",
+                    "write story",
+                    "write screenplay",
+                    "write scene",
+                    "describe scene in details such that it can be generated by text2img"
+                    ]
+            }
+        
+        st.write(ideas)
+
 def render_prompt_engineer_tab(tab):
     with tab:
         engneer_tab, ai_templates_tab, ai_tasks_tab, prompts_result_viewer_tab = st.tabs(['Engineering', 'AI-Templates', 'AI-Tasks', 'Result-Viewer'])
         
+        render_ai_templates_tab(ai_templates_tab)
         
 ## ----------------------------
 ## Workflow and Agents Tabs
@@ -74,7 +210,6 @@ def render_api_types_tab(tab):
             st.write("TODO: show json path queries for answers")
             st.write("TODO: translateFinishReason")
         
-        st.write("TODO: show apitype selection")
         st.write("TODO: maintain the current configuration in a kind of global Object, which can be updated and keeps the UI state in case or a reload.")
         st.write("TODO: track current selection, such that the configuration of zhis APIType can be implemented")
 
@@ -89,13 +224,23 @@ def render_settings_tab(tab):
         # render llm tasks (code completion, QA, QA with pretext) 
         # render general_tab
         
+def render_simple_invokder_test_tab(tab):
+    with tab:
+        json_api_template = get_RemoteApiTypes()['OobaBoogaWebUIv1API'].getJsonApiTemplate();
+        
+        template_engine = AIPETKTemplateEngine(None)
+        
+        st.code(template_engine.evaluateTemplate(json_api_template, {'llm.query':'this is my test for the llm.query parameter "we have this string inside"'}))
+        pass
         
 ## ----------------------------
 ## Main UI
 ## ---------------------------- 
 
-prompt_enginener_tab, workflow_agent_engineer_tab, settings_tab = st.tabs(['LLM Prompt Engineer','LLM Workflow & Agent Engineer','Settings'])
+prompt_enginener_tab, workflow_agent_engineer_tab, settings_tab, simple_invoker_tester_tab = st.tabs(['LLM Prompt Engineer','LLM Workflow & Agent Engineer','Settings','Simple Invocation Tests'])
 
 render_prompt_engineer_tab(prompt_enginener_tab)
 render_workflow_agent_engineer_tab(workflow_agent_engineer_tab)
 render_settings_tab(settings_tab)
+render_simple_invokder_test_tab(simple_invoker_tester_tab)
+
