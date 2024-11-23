@@ -3,7 +3,7 @@ Created on 22.09.2024
 
 @author: JohnDoe
 '''
-from de.mindscan.ai.petk.llmaccess.APIType import APIType
+from de.mindscan.ai.petk.llmaccess.APIType import APIType, ANSWER_KEY_CONTENT
 
 class OobaBoogaWebUIv1API(APIType):
     '''
@@ -19,7 +19,7 @@ class OobaBoogaWebUIv1API(APIType):
 
     def getJsonPathQueriesForAnswers(self):
         return {
-                "llm.response.content" : '$.results[0].text'
+                ANSWER_KEY_CONTENT : '$.results[0].text'
             }
     
     def translateFinishReason(self, reason:str):
