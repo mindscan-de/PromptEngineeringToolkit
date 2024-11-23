@@ -32,6 +32,7 @@ from de.mindscan.ai.petk.llmaccess.lm_apitypes import get_RemoteApiTypes
 from de.mindscan.ai.petk.llmaccess.lm_connection_endpoints import getConnectionEndpoints
 from de.mindscan.ai.petk.llmaccess.APIType import ANSWER_KEY_CONTENT
 from de.mindscan.ai.petk.llmaccess.transport.RemoteApiModelInvoker import RemoteApiModelInvoker
+from de.mindscan.ai.petk.llmaccess.lm_modeltypes import get_ModelTypes
 
 # Set the wide mode and application name
 st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
@@ -214,14 +215,36 @@ def render_api_types_tab(tab):
         
         st.write("TODO: maintain the current configuration in a kind of global Object, which can be updated and keeps the UI state in case or a reload.")
         st.write("TODO: track current selection, such that the configuration of zhis APIType can be implemented")
+        
+def render_model_types_tab(tab):
+    with tab:
+        modeltypes = get_ModelTypes()
+        selection_container, modeltype_data_container = st.columns([0.25,0.75])
+        with selection_container:
+            setting_modeltypes_selected_modeltype = st.selectbox("Select Model(-Type)", modeltypes.keys(), key="settings.modeltype.selected_model.type")
+            pass
+        with modeltype_data_container:
+            current_selected_model_type = modeltypes[setting_modeltypes_selected_modeltype]
+            current_modeltype_name = current_selected_model_type.getModelName()
+            
+            st.text_input("ModelType-Name", value=current_modeltype_name, disabled=True, key="settings.modeltype.["+current_modeltype_name+"].name")
+            st.text_input("ModelType-Identifier", value=current_selected_model_type.getModelIdentifier(),disabled=True, key="settings.modeltype.["+current_modeltype_name+"].identifier")
+            
+            st.write("TODO: Raw Model Invocation Template")
+            st.write("TODO: QA w pretext Template")
+            st.write("TODO: QA w/o pretext Template")
+            st.write("TODO: Code Completion Template")
+            
+            st.write("TODO: Chat templates?")
+            pass
+        pass        
 
 def render_settings_tab(tab):
     with tab:
         api_types_tab, model_tab, endpoints_tab, llm_tasks_tab, general_tab = st.tabs(["API-Types", "Models", "Endpoints", "LLM-Tasks", "Misc"])
         
         render_api_types_tab(api_types_tab)
-        # render api_tyes_tab
-        # render model_tab
+        render_model_types_tab(model_tab)
         # render endpoints_tab
         # render llm tasks (code completion, QA, QA with pretext) 
         # render general_tab
