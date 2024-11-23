@@ -31,7 +31,7 @@ import streamlit as st
 from de.mindscan.ai.petk.llmaccess.lm_apitypes import get_RemoteApiTypes
 from de.mindscan.ai.petk.llmaccess.lm_connection_endpoints import getConnectionEndpoints
 from de.mindscan.ai.petk.llmaccess.APIType import ANSWER_KEY_CONTENT
-from de.mindscan.ai.petk.llmaccess.transport import RemoteApiModelInvoker
+from de.mindscan.ai.petk.llmaccess.transport.RemoteApiModelInvoker import RemoteApiModelInvoker
 
 # Set the wide mode and application name
 st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
