@@ -7,9 +7,10 @@ import requests
 import json
 from jsonpath_ng import parse
 
-from de.mindscan.ai.petk.llmaccess.ConnectionEndpoint import ConnectionEndpoint
+
 from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
 from de.mindscan.ai.petk.llmaccess.APIType import REQUEST_KEY_LLM_QUERY
+from de.mindscan.ai.petk.llmaccess.transport import ConnectionEndpoint
 
 class RemoteApiModelInvoker(object):
     '''
