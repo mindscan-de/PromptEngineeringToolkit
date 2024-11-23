@@ -3,7 +3,8 @@ Created on 29.09.2024
 
 @author: JohnDoe
 '''
-from de.mindscan.ai.petk.llmaccess.APIType import APIType
+from de.mindscan.ai.petk.llmaccess.APIType import APIType, ANSWER_KEY_CONTENT,\
+    ANSWER_KEY_FINISH_REASON, ANSWER_KEY_NUM_GENERATED_TOKENS, ANSWER_KEY_SEED
 
 class HuggingfaceTGIv1API(APIType):
     '''
@@ -20,9 +21,9 @@ class HuggingfaceTGIv1API(APIType):
         
     def getJsonPathQueriesForAnswers(self):
         return {
-                "llm.response.content" : '$.generated_text',
-                "llm.response.finish.reason" : '$.details.finish_reason',
-                "llm.response.number.generated.tokens" : '$.details.generated_tokens',
-                "llm.response.seed" : '$.details.seed'
+                ANSWER_KEY_CONTENT : '$.generated_text',
+                ANSWER_KEY_FINISH_REASON : '$.details.finish_reason',
+                ANSWER_KEY_NUM_GENERATED_TOKENS : '$.details.generated_tokens',
+                ANSWER_KEY_SEED : '$.details.seed'
             }
         

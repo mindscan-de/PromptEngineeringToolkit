@@ -6,6 +6,16 @@ Created on 22.09.2024
 
 import os
 
+# Request keys
+REQUEST_KEY_LLM_QUERY = "llm.query"
+
+# Answer keys
+ANSWER_KEY_CONTENT = "llm.response.content"
+ANSWER_KEY_FINISH_REASON = "llm.response.finish.reason"
+ANSWER_KEY_NUM_GENERATED_TOKENS = "llm.response.number.generated.tokens"
+ANSWER_KEY_SEED = "llm.response.seed"
+
+
 class APIType(object):
     '''
     classdocs
