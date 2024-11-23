@@ -29,10 +29,10 @@ class HuggingfaceTGIv1API(APIType):
                 ANSWER_KEY_NUM_GENERATED_TOKENS : '$.details.generated_tokens',
                 ANSWER_KEY_SEED : '$.details.seed'
             }
+
         
-    def translateFinishReason(self, reason:str):
-        # if we have a finish reason, we may want to translate this reason
-        finish_reason = {
+    def getFinishReasonTranslationMap(self):
+        return {
             "" : LM_ANSWER_FINISH_REASON_UNKNOWN,
             "unknown" : LM_ANSWER_FINISH_REASON_UNKNOWN,
             "eos_token" : LM_ANSWER_FINISH_REASON_ENDOFSTREAM,
@@ -40,7 +40,4 @@ class HuggingfaceTGIv1API(APIType):
             # implement this later
             LM_KEY_FINISH_REASON_DEFAULT : LM_ANSWER_FINISH_REASON_UNKNOWN
             }
-
-        finish_reason.get(reason, None)
         
-    

@@ -209,7 +209,8 @@ def render_api_types_tab(tab):
             st.write("json path answers")
             st.write(current_selected_api_type.getJsonPathQueriesForAnswers())
             
-            st.write("TODO: translateFinishReason")
+            st.write("finish reason map")
+            st.write(current_selected_api_type.getFinishReasonTranslationMap())
         
         st.write("TODO: maintain the current configuration in a kind of global Object, which can be updated and keeps the UI state in case or a reload.")
         st.write("TODO: track current selection, such that the configuration of zhis APIType can be implemented")
@@ -225,7 +226,7 @@ def render_settings_tab(tab):
         # render llm tasks (code completion, QA, QA with pretext) 
         # render general_tab
         
-def render_simple_invokder_test_tab(tab):
+def render_simple_invoker_test_tab(tab):
     with tab:
         st.write("### Query")
         llm_query_input = st.text_area("LLM Query Input", height=16, key="invoker_test_tab.llm.query.input")
@@ -238,7 +239,7 @@ def render_simple_invokder_test_tab(tab):
         
             st.write("### Answer")
         
-            markdown_render_tab, raw_render_tab, json_render_tab =st.tabs(['Markdown','Raw','Json'])
+            markdown_render_tab, json_render_tab, raw_render_tab =st.tabs(['Markdown', 'Json', 'Raw'])
             with markdown_render_tab:
                 st.write(structure[ANSWER_KEY_CONTENT])
             with raw_render_tab:
@@ -257,5 +258,5 @@ prompt_enginener_tab, workflow_agent_engineer_tab, settings_tab, simple_invoker_
 render_prompt_engineer_tab(prompt_enginener_tab)
 render_workflow_agent_engineer_tab(workflow_agent_engineer_tab)
 render_settings_tab(settings_tab)
-render_simple_invokder_test_tab(simple_invoker_tester_tab)
+render_simple_invoker_test_tab(simple_invoker_tester_tab)
 

@@ -5,6 +5,8 @@ Created on 22.09.2024
 '''
 
 import os
+from de.mindscan.ai.petk.llmaccess.answer.AnswerFinishReason import LM_ANSWER_FINISH_REASON_UNKNOWN,\
+    LM_KEY_FINISH_REASON_DEFAULT
 
 # Request keys
 REQUEST_KEY_LLM_QUERY = "llm.query"
@@ -53,5 +55,15 @@ class APIType(object):
     def getJsonPathQueriesForAnswers(self):
         return {}
     
+    
+    def getFinishReasonTranslationMap(self):
+        return {
+            LM_KEY_FINISH_REASON_DEFAULT : LM_ANSWER_FINISH_REASON_UNKNOWN
+            }
+    
     def translateFinishReason(self, reason:str):
-        return {}
+        finish_reason = self.getFinishReasonTranslationMap()
+        if LM_KEY_FINISH_REASON_DEFAULT in finish_reason:
+            return finish_reason.get(reason, finish_reason[LM_KEY_FINISH_REASON_DEFAULT])
+        
+        return finish_reason.get(reason, None)
