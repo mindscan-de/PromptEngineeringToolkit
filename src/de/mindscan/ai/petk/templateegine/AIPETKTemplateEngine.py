@@ -96,8 +96,9 @@ class AIPETKTemplateEngine(object):
                 elif c == '\b':
                     builder.append('b')
                 else:
-                    builder.extend(["u00", AIPETKTemplateEngine.toHEX[(ord(c) >> 4) & 0x1],
-                                   AIPETKTemplateEngine.toHEX[(ord(c)) & 0xF]])
+                    builder.extend(["u00", 
+                                    AIPETKTemplateEngine.toHEX[(ord(c) >> 4) & 0x1],
+                                    AIPETKTemplateEngine.toHEX[(ord(c)) & 0xF]])
             elif ord(c) >= 0xD800 and ord(c) <= 0xDFFF:
                 builder.extend(["\\u",
                                 AIPETKTemplateEngine.toHEX[(ord(c) >> 12) & 0xf],
