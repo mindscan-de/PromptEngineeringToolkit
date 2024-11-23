@@ -27,14 +27,13 @@ SOFTWARE.
 '''
 
 import streamlit as st
-import os
 
 from de.mindscan.ai.petk.llmaccess.lm_apitypes import get_RemoteApiTypes
-from encodings.base64_codec import base64_decode
 from de.mindscan.ai.petk.llmaccess.lm_connection_endpoints import getConnectionEndpoints
 from de.mindscan.ai.petk.llmaccess.ConnectionEndpoint import ConnectionEndpoint
 from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
 from de.mindscan.ai.petk.llmaccess.RemoteApiModelInvoker import RemoteApiModelInvoker
+from de.mindscan.ai.petk.llmaccess.APIType import ANSWER_KEY_CONTENT
 
 # Set the wide mode and application name
 st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
@@ -230,15 +229,20 @@ def render_settings_tab(tab):
         
 def render_simple_invokder_test_tab(tab):
     with tab:
-        invoker = RemoteApiModelInvoker(None)
+        st.write("### Query")
+        llm_query_input = st.text_area("LLM Query Input", height=16, key="invoker_test_tab.llm.query.input")
         
-        endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
-        structure = invoker.invoke_backend(endpoint, """how to send a http post request in python?
-
-```python
-""")
+        if(llm_query_input):
+            invoker = RemoteApiModelInvoker(None)
+            
+            endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
+            structure = invoker.invoke_backend(endpoint, llm_query_input)
         
-        st.write(structure)
+            st.write("### Rendered Answer")
+            st.write(structure[ANSWER_KEY_CONTENT])
+            st.write("### Raw Answer")
+            st.code(structure[ANSWER_KEY_CONTENT])
+            
         pass
         
 ## ----------------------------
