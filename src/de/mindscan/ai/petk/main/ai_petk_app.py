@@ -236,10 +236,15 @@ def render_simple_invokder_test_tab(tab):
             endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
             structure = invoker.invoke_backend(endpoint, llm_query_input)
         
-            st.write("### Rendered Answer")
-            st.write(structure[ANSWER_KEY_CONTENT])
-            st.write("### Raw Answer")
-            st.code(structure[ANSWER_KEY_CONTENT])
+            st.write("### Answer")
+        
+            markdown_render_tab, raw_render_tab, json_render_tab =st.tabs(['Markdown','Raw','Json'])
+            with markdown_render_tab:
+                st.write(structure[ANSWER_KEY_CONTENT])
+            with raw_render_tab:
+                st.code(structure[ANSWER_KEY_CONTENT])
+            with json_render_tab:
+                st.write("```json\n"+str(structure[ANSWER_KEY_CONTENT]))
             
         pass
         
