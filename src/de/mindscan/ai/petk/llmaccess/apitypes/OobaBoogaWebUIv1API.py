@@ -4,9 +4,7 @@ Created on 22.09.2024
 @author: JohnDoe
 '''
 from de.mindscan.ai.petk.llmaccess.APIType import APIType, ANSWER_KEY_CONTENT
-from de.mindscan.ai.petk.llmaccess.answer.AnswerFinishReason import LM_ANSWER_FINISH_REASON_NONE,\
-    LM_ANSWER_FINISH_REASON_UNKNOWN, LM_ANSWER_FINISH_REASON_ENDOFSTREAM,\
-    LM_ANSWER_FINISH_REASON_TRUNCATED, LM_KEY_FINISH_REASON_DEFAULT
+from de.mindscan.ai.petk.llmaccess.answer.AnswerFinishReason import LM_ANSWER_FINISH_REASON_NONE
 
 class OobaBoogaWebUIv1API(APIType):
     '''

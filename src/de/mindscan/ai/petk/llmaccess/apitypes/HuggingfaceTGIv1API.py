@@ -43,5 +43,4 @@ class HuggingfaceTGIv1API(APIType):
 
         finish_reason.get(reason, None)
         
-        
- 
+    
