@@ -10,6 +10,7 @@ import streamlit as st
 
 from de.mindscan.ai.petk.llmaccess.ConnectionEndpoint import ConnectionEndpoint
 from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
+from de.mindscan.ai.petk.llmaccess.APIType import REQUEST_KEY_LLM_QUERY
 
 class RemoteApiModelInvoker(object):
     '''
@@ -54,7 +55,7 @@ class RemoteApiModelInvoker(object):
         
         # later join with task specific values and also with defaults for this model, and with defaults for this endpoint
         json_api_values = {
-            'llm.query':fully_prepared_llm_query
+            REQUEST_KEY_LLM_QUERY : fully_prepared_llm_query
             }
         
         return self.template_engine.evaluateTemplate(json_api_template, json_api_values)
