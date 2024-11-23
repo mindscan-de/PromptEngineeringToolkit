@@ -32,8 +32,17 @@ class ModelType(object):
     classdocs
     '''
     
-    def __init__(self):
+    def __init__(self, model_name, model_identifier):
+        self.__model_name = model_name
+        self.__model_identifier = model_identifier
         pass
+    
+    
+    def getModelName(self):
+        return self.__model_name
+    
+    def getModelIdentifier(self):
+        return self.__model_identifier
 
     def get_qa_prompt_template_with_context(self):
         raise NotImplementedError("Subclasses should implement this!")

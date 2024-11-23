@@ -14,6 +14,7 @@ class PhindCodeLama34Bv2(ModelType):
         '''
         Constructor
         '''
+        super().__init__("phind-codelama-34b-v2", "uuid of 'phind-codelama-34b-v2'")
 
     def get_qa_prompt_template_with_context(self):
         return \
