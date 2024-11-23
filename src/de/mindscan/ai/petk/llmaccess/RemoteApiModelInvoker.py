@@ -6,7 +6,6 @@ Created on 09.11.2024
 import requests
 import json
 from jsonpath_ng import parse
-import streamlit as st
 
 from de.mindscan.ai.petk.llmaccess.ConnectionEndpoint import ConnectionEndpoint
 from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
@@ -42,7 +41,7 @@ class RemoteApiModelInvoker(object):
             return {}
         
         json_answer = json.loads(response.text)
-        st.write(json_answer)
+        # st.write(json_answer)
         
         ## TODO: extract unified data from json answer...
         answer_map = self.extract_from_json_map(endpoint.remote_api_type.getJsonPathQueriesForAnswers(), json_answer)
