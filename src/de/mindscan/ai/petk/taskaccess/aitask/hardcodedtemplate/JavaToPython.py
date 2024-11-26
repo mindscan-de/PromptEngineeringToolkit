@@ -15,7 +15,7 @@ class JavaToPython(AITaskTemplate):
         '''
         Constructor
         '''
-        super.__init__(
+        super().__init__(
             'java-to-python',
             # JavaJunit4AaaStyleUnittest.MODEL_COMPATIBILITY,
             '',

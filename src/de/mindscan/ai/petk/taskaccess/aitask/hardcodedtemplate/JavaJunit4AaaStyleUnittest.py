@@ -40,7 +40,7 @@ class JavaJunit4AaaStyleUnittest(AITaskTemplate):
         '''
         Constructor
         '''
-        super.__init__(
+        super().__init__(
             'java-junit-4-aaa-styled-unittest',
             JavaJunit4AaaStyleUnittest.MODEL_COMPATIBILITY,
             JavaJunit4AaaStyleUnittest.SYSTEM_PROMPT,
