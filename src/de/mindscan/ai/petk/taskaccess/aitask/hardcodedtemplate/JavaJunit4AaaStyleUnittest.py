@@ -44,6 +44,8 @@ class JavaJunit4AaaStyleUnittest(AITaskTemplate):
             'java-junit-4-aaa-styled-unittest',
             JavaJunit4AaaStyleUnittest.MODEL_COMPATIBILITY,
             JavaJunit4AaaStyleUnittest.SYSTEM_PROMPT,
-            JavaJunit4AaaStyleUnittest.TASK_QUERY
+            JavaJunit4AaaStyleUnittest.TASK_QUERY,
+            JavaJunit4AaaStyleUnittest.TASK_CONTEXT_TEMPLATE,
+            JavaJunit4AaaStyleUnittest.TASK_ANSWER_PRETEXT_TEMPLATE
                        )
     

@@ -22,5 +22,9 @@ class JavaToPython(AITaskTemplate):
             # JavaJunit4AaaStyleUnittest.SYSTEM_PROMPT,
             '',
             # JavaJunit4AaaStyleUnittest.TASK_QUERY
-            ''
+            '',
+            # Context Template
+            '',
+            # Answer Pretext Template
+            '```python\n' 
             )

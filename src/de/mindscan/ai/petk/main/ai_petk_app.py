@@ -33,10 +33,11 @@ from de.mindscan.ai.petk.llmaccess.lm_connection_endpoints import getConnectionE
 from de.mindscan.ai.petk.llmaccess.APIType import ANSWER_KEY_CONTENT
 from de.mindscan.ai.petk.llmaccess.transport.RemoteApiModelInvoker import RemoteApiModelInvoker
 from de.mindscan.ai.petk.llmaccess.lm_modeltypes import get_ModelTypes
+from de.mindscan.ai.petk.taskaccess.aitask.ai_tasktemplates import get_ai_task_tasktemplates
 
 # Set the wide mode and application name
 st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
-
+st.markdown("""<style>textarea { font-family:Courier New important!; } </style>""", unsafe_allow_html=True)
 # WE do want to initialize the UI if session is not properly initialized 
 
 ## ----------------------------
@@ -45,6 +46,23 @@ st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
 
 def render_ai_templates_tab(tab):
     with tab:
+        ai_task_templates = get_ai_task_tasktemplates()
+        task_name_container, ai_task_container = st.columns([0.25,0.75])
+        
+        with task_name_container:
+            settings_aitemplates_selected_aitasktemplate = st.selectbox("Select AI Task-Template", ai_task_templates.keys(),key="llm_pe.aitemplates.selected.aitasktemplate")
+            pass
+        with ai_task_container:
+            # we want to figure out, what the template configurations are
+            aitasktemplate = ai_task_templates[settings_aitemplates_selected_aitasktemplate]
+            
+            st.text_area("System-Prompt", value=aitasktemplate.get_systemm_prompt(), height=160, key="llm_pe.aitemplates.selected.systemprompt")
+            st.text_area("Task Query", value=aitasktemplate.get_task_query(), key="llm_pe.aitemplates.selected.taskquery")
+            st.text_area("Task-Context Template", value=aitasktemplate.get_task_context_template(), key="llm_pe.aitemplate.selected.taskcontexttemplate")
+            st.text_area("Task-Answer Pretext Template", value=aitasktemplate.get_task_answer_pretext_template(), key="llm_pe.aitemplate.selected.taskanswerpretexttemplate")
+            pass
+        
+        
         ideas ={
                 'unittest': ['generate java4 unit test from code/complete the unit tests'],
                 'refactor': [
@@ -172,6 +190,7 @@ def render_ai_templates_tab(tab):
                     ]
             }
         
+        st.write("### More Ideas")
         st.write(ideas)
 
 def render_prompt_engineer_tab(tab):
