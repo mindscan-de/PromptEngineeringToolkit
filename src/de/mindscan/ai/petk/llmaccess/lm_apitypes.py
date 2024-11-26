@@ -29,13 +29,13 @@ SOFTWARE.
 from de.mindscan.ai.petk.llmaccess.apitypes import OobaBoogaWebUIv1API,\
     HuggingfaceTGIv1API
 
-__OobaBoogaWebUIv1API = OobaBoogaWebUIv1API.OobaBoogaWebUIv1API(None)
-__HuggingfaceTextGenerationInferenceAPI = HuggingfaceTGIv1API.HuggingfaceTGIv1API(None) 
+__OobaBoogaWebUIv1API = OobaBoogaWebUIv1API.OobaBoogaWebUIv1API
+__HuggingfaceTextGenerationInferenceAPI = HuggingfaceTGIv1API.HuggingfaceTGIv1API
 
 def get_RemoteApiTypes():
     remote_api_types = {
-            'OobaBoogaWebUIv1API': __OobaBoogaWebUIv1API,
-            'HuggingFaceTextGenerationInferenceAPI': __HuggingfaceTextGenerationInferenceAPI
+            'OobaBoogaWebUIv1API': __OobaBoogaWebUIv1API(None),
+            'HuggingFaceTextGenerationInferenceAPI': __HuggingfaceTextGenerationInferenceAPI(None)
         }
 
     return remote_api_types
