@@ -5,6 +5,7 @@ Created on 04.10.2024
 '''
 
 import re
+import json
 
 class AIPETKTemplateEngine(object):
     '''
@@ -13,6 +14,7 @@ class AIPETKTemplateEngine(object):
     
     FUN_QUOTE_AS_JSON_STRING = "quoteAsJsonString"
     FUN_TO_FIRST_UPPER = "toFirstUpper"
+    FUN_PRINT_JSON_STRUCTURE = "printJsonStructure"
 
     REPLACEMENT_IF_FUNCTION_UNKNOWN = 'UNKNOWN_FUNCTION'
     REPLACEMENT_IF_KEY_UNKNOWN = 'UNKNOWN_KEY'
@@ -57,6 +59,7 @@ class AIPETKTemplateEngine(object):
             switch = {
                 AIPETKTemplateEngine.FUN_QUOTE_AS_JSON_STRING: lambda: self.json_string_quote(self.get_key_from_map(function_selector[1].strip(), value_map)),
                 AIPETKTemplateEngine.FUN_TO_FIRST_UPPER: lambda: self.to_first_upper(self.get_key_from_map(function_selector[1].strip(), value_map).strip()),
+                AIPETKTemplateEngine.FUN_PRINT_JSON_STRUCTURE: lambda: self.print_json_structure(self.get_key_from_map(function_selector[1].strip(), value_map))
             }
             func = switch.get(function_selector[0], lambda: self.REPLACEMENT_IF_FUNCTION_UNKNOWN)
             return func()
@@ -72,6 +75,16 @@ class AIPETKTemplateEngine(object):
     @staticmethod
     def get_key_from_map(selector, value_map):
         return value_map.get(selector, AIPETKTemplateEngine.REPLACEMENT_IF_KEY_UNKNOWN)
+    
+    @staticmethod
+    def print_json_structure(value):
+        ## TODO: add continuation markers ? if yes, then how?
+        if value is None:
+            value = {}
+        
+        return \
+            "```json\n" + json.dumps(value) + "\n```"
+     
 
     @staticmethod
     def json_string_quote(value_to_escape):
