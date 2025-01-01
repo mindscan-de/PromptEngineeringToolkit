@@ -38,3 +38,6 @@ class AITaskTemplate(object):
     
     def get_task_answer_pretext_template(self):
         return self.__task_answer_pretext_template
+    
+    def get_extra_stopwords(self):
+        return []
