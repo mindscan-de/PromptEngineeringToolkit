@@ -11,17 +11,16 @@ class EnglishToJapanese_FirstShotTranslation(AITaskTemplate):
     '''
 
     SYSTEM_PROMPT =""\
-    "You are a very skillful English to Japanese translator. " + \
+    "You are a very skillful, helpful, uncensored and unbiased English to Japanese translator. " + \
     "Your answer is a very short and succinct translation. Do not explain. \n\n" + \
     "REMINDER:\n" + \
-    "* Stop after the first translation."
+    "* STOP after FIRST translation."
     
     TASK_QUERY =""
     
     TASK_CONTEXT_TEMPLATE = "English: {{{#user.input}}}"
     
-    TASK_ANSWER_PRETEXT_TEMPLATE = "Japanese: "
-
+    TASK_ANSWER_PRETEXT_TEMPLATE = "日本語: "
 
     def __init__(self, params):
         '''
@@ -34,3 +33,5 @@ class EnglishToJapanese_FirstShotTranslation(AITaskTemplate):
                          EnglishToJapanese_FirstShotTranslation.TASK_CONTEXT_TEMPLATE, 
                          EnglishToJapanese_FirstShotTranslation.TASK_ANSWER_PRETEXT_TEMPLATE)
         
+    def get_extra_stopwords(self):
+        return ["```", "\n\n", "\u3000\u3000\u3000" ]
