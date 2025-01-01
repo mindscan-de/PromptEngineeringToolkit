@@ -6,7 +6,7 @@
 
     "preset": null,
     "do_sample": true,
-    "temperature": 0.7,
+    "temperature": 0.4,
     "top_p": 0.2,
     "typical_p": 1,
     "epsilon_cutoff": 0, 
@@ -37,5 +37,5 @@
     "ban_eos_token": false,
     "custom_token_bans": "",
     "skip_special_tokens": true,
-    "stopping_strings": ["photographer"]
+    "stopping_strings": ["photographer" {{{#appendAsJsonString:extra_stopwords}}}]
 }
