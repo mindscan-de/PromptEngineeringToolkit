@@ -15,6 +15,8 @@ class AIPETKTemplateEngine(object):
     FUN_QUOTE_AS_JSON_STRING = "quoteAsJsonString"
     FUN_TO_FIRST_UPPER = "toFirstUpper"
     FUN_PRINT_JSON_STRUCTURE = "printJsonStructure"
+    FUN_APPEND_AS_JSON_STRING = "appendAsJsonString"
+    
 
     REPLACEMENT_IF_FUNCTION_UNKNOWN = 'UNKNOWN_FUNCTION'
     REPLACEMENT_IF_KEY_UNKNOWN = 'UNKNOWN_KEY'
@@ -59,7 +61,8 @@ class AIPETKTemplateEngine(object):
             switch = {
                 AIPETKTemplateEngine.FUN_QUOTE_AS_JSON_STRING: lambda: self.json_string_quote(self.get_key_from_map(function_selector[1].strip(), value_map)),
                 AIPETKTemplateEngine.FUN_TO_FIRST_UPPER: lambda: self.to_first_upper(self.get_key_from_map(function_selector[1].strip(), value_map).strip()),
-                AIPETKTemplateEngine.FUN_PRINT_JSON_STRUCTURE: lambda: self.print_json_structure(self.get_key_from_map(function_selector[1].strip(), value_map))
+                AIPETKTemplateEngine.FUN_PRINT_JSON_STRUCTURE: lambda: self.print_json_structure(self.get_key_from_map(function_selector[1].strip(), value_map)),
+                AIPETKTemplateEngine.FUN_APPEND_AS_JSON_STRING: lambda: self.append_as_json_string(self.get_key_from_map(function_selector[1].strip(), value_map)),
             }
             func = switch.get(function_selector[0], lambda: self.REPLACEMENT_IF_FUNCTION_UNKNOWN)
             return func()
@@ -77,14 +80,20 @@ class AIPETKTemplateEngine(object):
         return value_map.get(selector, AIPETKTemplateEngine.REPLACEMENT_IF_KEY_UNKNOWN)
     
     @staticmethod
-    def print_json_structure(value):
+    def print_json_structure(structure):
         ## TODO: add continuation markers ? if yes, then how?
-        if value is None:
-            value = {}
+        if structure is None:
+            structure = {}
         
-        return \
-            "```json\n" + json.dumps(value) + "\n```"
-     
+        return "```json\n" + json.dumps(structure,indent=2) + "\n```"
+    @staticmethod
+    def append_as_json_string(value):
+        if value is None:
+            return ""
+ 
+        value_to_append = ", "+",".join([ json.dumps(x) for x in value ])
+        
+        return value_to_append
 
     @staticmethod
     def json_string_quote(value_to_escape):
