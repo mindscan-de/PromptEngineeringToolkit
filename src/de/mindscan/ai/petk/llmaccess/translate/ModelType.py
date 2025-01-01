@@ -55,3 +55,11 @@ class ModelType(object):
     
     def get_raw_template(self):
         raise NotImplementedError("Subclasses should implement this!")
+    
+    def get_unstructured_prompt_template_with_context_and_pretext(self):
+        return \
+            "\n" + \
+            "{{{#system.prompt}}}\n" + \
+            "{{{#query}}}\n" + \
+            "{{{#context}}}\n" + \
+            "{{{#pretext}}}"
