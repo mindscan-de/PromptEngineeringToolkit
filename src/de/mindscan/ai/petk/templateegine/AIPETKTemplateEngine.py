@@ -90,6 +90,9 @@ class AIPETKTemplateEngine(object):
     def append_as_json_string(value):
         if value is None:
             return ""
+        
+        if len(value) == 0:
+            return ""
  
         value_to_append = ", "+",".join([ json.dumps(x) for x in value ])
         
