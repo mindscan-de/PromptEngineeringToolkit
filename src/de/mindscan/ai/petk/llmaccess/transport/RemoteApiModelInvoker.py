@@ -25,10 +25,9 @@ class RemoteApiModelInvoker(object):
         self.template_engine = AIPETKTemplateEngine(None)
         
 
-    def invoke_backend(self, endpoint:ConnectionEndpoint, fully_prepared_llm_query:str):
-        completedJsonRequestStructure:str = self.build_json_request_structure(endpoint, fully_prepared_llm_query)
+    def invoke_backend(self, endpoint:ConnectionEndpoint, fully_prepared_llm_query:str, extra_dictionary=[]):
+        completedJsonRequestStructure:str = self.build_json_request_structure(endpoint, fully_prepared_llm_query, extra_dictionary)
         endpointURL = endpoint.endpoint_url
-        
         
         payload = json.loads(completedJsonRequestStructure)
         
@@ -50,13 +49,14 @@ class RemoteApiModelInvoker(object):
         return answer_map
 
     
-    def build_json_request_structure(self, endpoint:ConnectionEndpoint, fully_prepared_llm_query:str) -> str:
+    def build_json_request_structure(self, endpoint:ConnectionEndpoint, fully_prepared_llm_query:str, extra_dictionary) -> str:
         json_api_template:str = endpoint.remote_api_type.getJsonApiTemplate();
         
         # later join with task specific values and also with defaults for this model, and with defaults for this endpoint
         json_api_values = {
             REQUEST_KEY_LLM_QUERY : fully_prepared_llm_query
             }
+        json_api_values.update(extra_dictionary)
         
         return self.template_engine.evaluateTemplate(json_api_template, json_api_values)
 
