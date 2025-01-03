@@ -34,6 +34,12 @@ from de.mindscan.ai.petk.llmaccess.APIType import ANSWER_KEY_CONTENT
 from de.mindscan.ai.petk.llmaccess.transport.RemoteApiModelInvoker import RemoteApiModelInvoker
 from de.mindscan.ai.petk.llmaccess.lm_modeltypes import get_ModelTypes
 from de.mindscan.ai.petk.taskaccess.aitask.ai_tasktemplates import get_ai_task_tasktemplates
+from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
+from de.mindscan.ai.petk.llmaccess.translate.modeltypes.PhindCodeLama34Bv2 import PhindCodeLama34Bv2
+from de.mindscan.ai.petk.taskaccess.aitask.hardcodedtemplate.EnglishToJapaneseTasks import EnglishToJapanese_FirstShotTranslation,\
+    EnglishToJapanese_FirstShotRefiner,\
+    EnglishToJapanese_BestAnswerJsonExtractor,\
+    EnglishToJapanese_ProofreadBestAnswerAndExtract
 
 # Set the wide mode and application name
 st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
@@ -60,6 +66,9 @@ def render_ai_templates_tab(tab):
             st.text_area("Task Query", value=aitasktemplate.get_task_query(), key="llm_pe.aitemplates.selected.taskquery")
             st.text_area("Task-Context Template", value=aitasktemplate.get_task_context_template(), key="llm_pe.aitemplate.selected.taskcontexttemplate")
             st.text_area("Task-Answer Pretext Template", value=aitasktemplate.get_task_answer_pretext_template(), key="llm_pe.aitemplate.selected.taskanswerpretexttemplate")
+            
+            st.write("#### Task To Model Compatibility")
+            st.text_input("Model Compatibility", value=aitasktemplate.get_model_compatibility(), disabled=True, key="llm_pe.aitemplate.selected.taskmodelcompatibility")
             pass
         
         
@@ -192,12 +201,60 @@ def render_ai_templates_tab(tab):
         
         st.write("### More Ideas")
         st.write(ideas)
+        
+def render_ai_template_tryout_tab(tab):
+    with tab:
+        st.write("Hello World!")
+        st.write("TODO: select template")
+        st.write("TODO: identify variables in template")
+        st.write("TODO: provide input fields for identified variables")
+        st.write("TODO: execute model based QA task with pretext")
+        st.write("TODO: select model")
+        st.write("TODO: execute task")
+        st.write("TODO: provide result")
+        st.write("TODO: render result")
+        st.write("TODO: save result for later replay (Viewer)")
+        
+def render_ai_agent_tasks_tab(tab):
+    with tab:
+        template_engine = AIPETKTemplateEngine(None)
+        
+        json_api_template = '''
+You are a software architect. Define the required software components for {{{#project.ultraShortDescription}}} called "{{{#project.name}}}". 
+
+Task: Provide the answer as a json structure. Output format:
+{{{#printJsonStructure:output.jsonFormat}}}
+
+Answer:
+```json
+        '''
+        
+        json_api_values = {
+            'project.name': "FastBackup",
+            'project.ultraShortDescription': "a Data Archiving System",
+            'output.jsonFormat': { 
+                "components":
+                    [
+                        {
+                            "Component": "COMPONENTNAME",
+                            "Description": "Medium length description of Component"
+                        }
+                    ]
+                }
+            }
+        
+        evaluated = template_engine.evaluateTemplate(json_api_template,json_api_values)
+        st.code(evaluated)
+        
+        pass
 
 def render_prompt_engineer_tab(tab):
     with tab:
-        engneer_tab, ai_templates_tab, ai_tasks_tab, prompts_result_viewer_tab = st.tabs(['Engineering', 'AI-Templates', 'AI-Tasks', 'Result-Viewer'])
+        engneer_tab, ai_template_tryout_tab, ai_templates_tab,ai_tasks_tab, ai_agent_tasks_tab, prompts_result_viewer_tab = st.tabs(['Engineering', 'AI-Template-Tryout', 'AI-Templates', 'AI-Tasks', 'AI-Agent-Tasks','Result-Viewer'])
         
         render_ai_templates_tab(ai_templates_tab)
+        render_ai_template_tryout_tab(ai_template_tryout_tab)
+        render_ai_agent_tasks_tab(ai_agent_tasks_tab)
         
 ## ----------------------------
 ## Workflow and Agents Tabs
@@ -290,15 +347,185 @@ def render_simple_invoker_test_tab(tab):
                 st.write("```json\n"+str(structure[ANSWER_KEY_CONTENT]))
             
         pass
+    
+def render_translator_test_tab(tab):
+    with tab:
+        st.write("### English to japanese translator")
+        
+        english_input = st.text_input("English",disabled=False, key="en2jp_translator.user_input")
+        st.write("Input:"+english_input)
+        
+        input = {
+            "user.input":english_input
+            }
+        
+        # 1st step, first shot translation to japanese
+        # let's assume we have this phing codelama model
+        model = PhindCodeLama34Bv2(None)
+        model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
+        st.code(model_template)
+        
+        st.write("#### Task 1 - 1st shot translation")
+        
+        # now lets take our first task and  build the task promt here
+        en2jp_firstshot = EnglishToJapanese_FirstShotTranslation(None)
+        system_prompt = en2jp_firstshot.get_systemm_prompt()
+        query = en2jp_firstshot.get_task_query()
+        context_template = en2jp_firstshot.get_task_context_template()
+        pretext_template = en2jp_firstshot.get_task_answer_pretext_template()
+        extra_stopwords = en2jp_firstshot.get_extra_stopwords()
+        
+        # now we must fill the contest_template and make it a context
+        # now ew must fill the pretext_template and make it a pretext
+        # use the template engine
+        template_engine = AIPETKTemplateEngine(None)
+        context = template_engine.evaluateTemplate(context_template, input)
+        pretext = template_engine.evaluateTemplate(pretext_template, input)
+        
+        # now fill the model template
+        task_data = {
+            'system.prompt':system_prompt,
+            'query':query,
+            'context':context,
+            'pretext':pretext,
+            } 
+
+        model_task = template_engine.evaluateTemplate(model_template, task_data)
+        st.code(model_task)
+        
+        # now execute the model task for a given endpoint and retrieve the answer
+        invoker = RemoteApiModelInvoker(None)
+            
+        endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
+        result_1stshot = invoker.invoke_backend(endpoint, model_task, {
+                "extra_stopwords":extra_stopwords
+            } )
+        input['task1.task'] = model_task
+        input['task1.result'] = result_1stshot['llm.response.content']
+        
+        st.code(input['task1.result'])
+        
+        
+        # ----------------------------------------
+        
+        st.write("#### Task 2 - 1st shot refiner")
+        
+        en2jp_firstshotrefiner = EnglishToJapanese_FirstShotRefiner(None)
+        
+        system_prompt = en2jp_firstshotrefiner.get_systemm_prompt()
+        query = en2jp_firstshotrefiner.get_task_query()
+        context_template = en2jp_firstshotrefiner.get_task_context_template()
+        pretext_template = en2jp_firstshotrefiner.get_task_answer_pretext_template()
+        extra_stopwords = en2jp_firstshotrefiner.get_extra_stopwords()
+        
+        context = template_engine.evaluateTemplate(context_template, input)
+        pretext = template_engine.evaluateTemplate(pretext_template, input)
+        
+        # now fill the model template
+        task_data = {
+            'system.prompt':system_prompt,
+            'query':query,
+            'context':context,
+            'pretext':pretext,
+            } 
+
+        model_task = template_engine.evaluateTemplate(model_template, task_data)
+        st.code(model_task)
+        
+        result_1stshotrefiner = invoker.invoke_backend(endpoint, model_task, {
+                "extra_stopwords":extra_stopwords
+            } )
+        
+        input['task2.task'] = model_task
+        input['task2.result'] = result_1stshotrefiner['llm.response.content']
+        
+        st.code(input['task2.result'])
+        
+        # -----------------------------------
+        st.write("#### Task 3 - Extract")
+        
+        en2jp_extractbestanswer = EnglishToJapanese_BestAnswerJsonExtractor(None)
+        
+        system_prompt = en2jp_extractbestanswer.get_systemm_prompt()
+        query = en2jp_extractbestanswer.get_task_query()
+        context_template = en2jp_extractbestanswer.get_task_context_template()
+        pretext_template = en2jp_extractbestanswer.get_task_answer_pretext_template()
+        extra_stopwords = en2jp_extractbestanswer.get_extra_stopwords()
+        
+        input['expectedResultStructure'] = {
+            "english":"The English translation goes here",
+            "japanese":"The best Japanese translation goes here",
+            "romaji":"The Jpanese reading for the translation goes here",
+            "kana":"The Japanese kana reading for the translation goes here"
+            }
+        
+        context = template_engine.evaluateTemplate(context_template, input)
+        pretext = template_engine.evaluateTemplate(pretext_template, input)
+
+        # now fill the model template
+        task_data = {
+            'system.prompt':system_prompt,
+            'query':query,
+            'context':context,
+            'pretext':pretext,
+            } 
+
+        
+        model_task = template_engine.evaluateTemplate(model_template, task_data)
+        st.code(model_task)
+        
+        result_extractor = invoker.invoke_backend(endpoint, model_task, {
+                "extra_stopwords":extra_stopwords
+            } )
+        
+        input['task3.task'] = model_task
+        input['task3.result'] = result_extractor['llm.response.content']
+
+        st.code(result_extractor['llm.response.content'], language="json")
+        
+        # -----------------------------------
+        st.write("#### Task 3 - Proofread Answer")
+        
+        en2jp_proofreader = EnglishToJapanese_ProofreadBestAnswerAndExtract(None)
+        
+        system_prompt = en2jp_proofreader.get_systemm_prompt()
+        query = en2jp_proofreader.get_task_query()
+        context_template = en2jp_proofreader.get_task_context_template()
+        pretext_template = en2jp_proofreader.get_task_answer_pretext_template()
+        extra_stopwords = en2jp_proofreader.get_extra_stopwords()
+        
+        context = template_engine.evaluateTemplate(context_template, input)
+        pretext = template_engine.evaluateTemplate(pretext_template, input)
+
+        # now fill the model template
+        task_data = {
+            'system.prompt':system_prompt,
+            'query':query,
+            'context':context,
+            'pretext':pretext,
+            } 
+        
+        model_task = template_engine.evaluateTemplate(model_template, task_data)
+        st.code(model_task)
+
+        result_proofread = invoker.invoke_backend(endpoint, model_task, {
+                "extra_stopwords":extra_stopwords
+            } )
+        
+        input['task3.task'] = model_task
+        input['task3.result'] = result_proofread['llm.response.content']
+
+        st.code(result_proofread['llm.response.content'], language="json")
+        
         
 ## ----------------------------
 ## Main UI
 ## ---------------------------- 
 
-prompt_enginener_tab, workflow_agent_engineer_tab, settings_tab, simple_invoker_tester_tab = st.tabs(['LLM Prompt Engineer','LLM Workflow & Agent Engineer','Settings','Simple Invocation Tests'])
+prompt_enginener_tab, workflow_agent_engineer_tab, settings_tab, simple_invoker_tester_tab, translator_test_tab = st.tabs(['LLM Prompt Engineer','LLM Workflow & Agent Engineer','Settings','Simple Invocation Tests','Translator Test'])
 
 render_prompt_engineer_tab(prompt_enginener_tab)
 render_workflow_agent_engineer_tab(workflow_agent_engineer_tab)
 render_settings_tab(settings_tab)
 render_simple_invoker_test_tab(simple_invoker_tester_tab)
-
+render_translator_test_tab(translator_test_tab)
