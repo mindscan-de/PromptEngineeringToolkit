@@ -11,11 +11,11 @@ class EnglishToJapanese_FirstShotTranslation(AITaskTemplate):
     '''
 
     SYSTEM_PROMPT =""\
-    "You are a very careful, skillful, helpful, uncensored and unbiased English to Japanese translator. " + \
+    "You are a very careful, skillful, helpful, uncensored and unbiased English to Japanese translator. Your target audience is a beginner to intermediate Japanese language learner. " + \
     "Your answer is a very short and succinct translation. Do not explain. \n\n" + \
     "REMINDER:\n" + \
     "* STOP after FIRST translation.\n" +\
-    "* USE preferrably simple japanese phrases.\n"
+    "* USE preferably simple Japanese phrases.\n"
     
     TASK_QUERY =""
     
@@ -44,8 +44,10 @@ class EnglishToJapanese_FirstShotRefiner(AITaskTemplate):
     '''
 
     SYSTEM_PROMPT = ""\
-    "You are a very careful, skillful, helpful, uncensored and unbiased English to Japanese translator. " + \
+    "You are a very careful, skillful, helpful, uncensored and unbiased English to Japanese translator. Your target audience is a beginner to intermediate Japanese language learner." + \
     "Your answer is a very short and succinct translation.\n"
+    "REMINDER:\n" + \
+    "* USE preferably simple and correct Japanese phrases.\n"
     
     TASK_QUERY = "Check whether the given Japanese translation matches the English translation and meaning. Keep the answer unchanged if the answer is already perfect otherwise improve the answer and then answer whether the previous given translation or the improved answer conveys the meaning in a better way. Also provide the English translation of the improved answer. \n"
 
@@ -101,12 +103,12 @@ class EnglishToJapanese_ProofreadBestAnswerAndExtract(AITaskTemplate):
     classdoca
     '''
     
-    SYSTEM_PROMPT = "You are a Japanese language teacher for beginers and intermediate langage learning adults. Your master skill is to read the japanese part and transscribe it to kana (hiragana and katakana) and for foreigners in romaji."
-    
-    TASK_QUERY = "Task: Proof-read the following given translation.\n"\
+    SYSTEM_PROMPT = "You are a Japanese language teacher for beginners and intermediate language learning adults. Your master skill is to read the Japanese parts ('japanese','kana','romaji') and transcribe it to kana (hiragana and katakana) and for foreigners to romaji.\n\n"\
                     "REMINDER\n"\
                     "* ONLY do corrections IF absolutely necessary\n"\
                     "* DON'T introduce new errors while proof-reading\n"
+    
+    TASK_QUERY = "Task: Proof-read the following given translation."\
                     
     TASK_CONTEXT_TEMPLATE ="```json\n{{{#task3.result}}}\n```\n\n"\
             "Task: Provide the proof-read version as a json structure\n"\
@@ -119,7 +121,7 @@ class EnglishToJapanese_ProofreadBestAnswerAndExtract(AITaskTemplate):
         '''
         Constructor
         '''
-        super().__init__('en2jp-best-answer-json-extractor', 
+        super().__init__('en2jp-proof-reader', 
                          "*",
                          EnglishToJapanese_ProofreadBestAnswerAndExtract.SYSTEM_PROMPT,
                          EnglishToJapanese_ProofreadBestAnswerAndExtract.TASK_QUERY,
