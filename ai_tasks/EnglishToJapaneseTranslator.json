@@ -108,6 +108,7 @@
 			},
 			{
 				"taskname":"proofreadBestAnswerAndExtract",
+				"short_task_header":"#### Task 4 - Proofread Answer",
 				"version":"1.0.0",
 				"type":"AITaskTemplate",
 				"system_prompt":"You are a Japanese language teacher for beginners and intermediate language learning adults. Your master skill is to read the Japanese parts ('japanese','kana','romaji') and transcribe it to kana (hiragana and katakana) and for foreigners to romaji.\\n\\nREMINDER\\n* ONLY do corrections IF absolutely necessary\\n* DON'T introduce new errors while proof-reading\\n* provide a kana reading based on hiragana script\\n* USE white spaces for romaji and kana ONLY between words to help English speakers.\\n",
@@ -116,10 +117,22 @@
 				"task_answer_pretext":"Answer:\\n```json\\n",
 				"extra_stopwords":[],
 				"inputs":[],
-				"outputs":[]
+				"outputs":[
+					{
+						"target":"task4.task",
+						"source":"local.model_task",
+						"__datatype":"string"
+					},
+					{
+						"target":"task4.result",
+						"source":"result.llm.response.content",
+						"__datatype":"jsonstring"
+					}
+				]
 			},
 			{
 				"taskname":"translationRating",
+				"short_task_header":"#### Task 5 - Answer rating",
 				"version":"1.0.0",
 				"type":"AITaskTemplate",
 				"system_prompt":"You are an experienced translator between the English and Japanese Language.\\n\\nREMINDER:\\n* IF Rating is 6 OR below 6 THEN explain, how the translation can be further improved\\n* IF rating is above 7 only output the rating\\n",
@@ -128,7 +141,18 @@
 				"task_answer_pretext":"Answer:\nRating: ",
 				"extra_stopwords":["```", "\u3000\u3000\u3000","====="],
 				"inputs":[],
-				"outputs":[]
+				"outputs":[
+					{
+						"target":"task5.task",
+						"source":"local.model_task",
+						"__datatype":"string"
+					},
+					{
+						"target":"task5.result",
+						"source":"result.llm.response.content",
+						"__datatype":"string"
+					}
+				]
 			}
 		]
 	},
@@ -141,6 +165,12 @@
 			},
 			"firstShotRefiner":{
 				"next":["bestAnswerAndJsonExtractor"]
+			},
+			"bestAnswerAndJsonExtractor":{
+				"next":["proofreadBestAnswerAndExtract"]
+			},
+			"proofreadBestAnswerAndExtract":{
+				"next":["translationRating"]
 			}
 		}
 	},
