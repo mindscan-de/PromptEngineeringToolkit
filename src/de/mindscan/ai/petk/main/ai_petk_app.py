@@ -378,6 +378,38 @@ def buildModelTask(aiTaskTemplate, model_template, taskRuntimeEnvironment):
     
     return model_task, extra_stopwords
 
+
+def buildModelTaskFromJson(current_node_name, task_nodes, model_template, taskRuntimeEnvironment):
+    current_node = None
+    for task_node in task_nodes:
+        if task_node["taskname"] == current_node_name:
+            current_node = task_node
+    
+    if current_node is None:
+        return "",[]
+    
+    system_prompt = current_node["system_prompt"]
+    query = current_node["task_query"]
+    context_template = current_node["task_context_template"]
+    pretext_template = current_node["task_answer_pretext"]
+    extra_stopwords = current_node["extra_stopwords"] or []
+    
+    template_engine = AIPETKTemplateEngine(None)
+    context = template_engine.evaluateTemplate(context_template, taskRuntimeEnvironment)
+    pretext = template_engine.evaluateTemplate(pretext_template, taskRuntimeEnvironment)
+    
+    task_data = {
+        'system.prompt':system_prompt,
+        'query':query,
+        'context':context,
+        'pretext':pretext,
+        } 
+
+    model_task = template_engine.evaluateTemplate(model_template, task_data)
+
+    return model_task, extra_stopwords, current_node
+
+
 def render_ai_task_graph_tab(tab):
     execute_instructions = {}
     task_nodes = []
@@ -389,6 +421,7 @@ def render_ai_task_graph_tab(tab):
         execute_instructions = ai_task_description["execute"]
         task_nodes = ai_task_description["nodedata"]['nodes']
         metadata = ai_task_description["__metadata"]
+        edgedata = ai_task_description["edgedata"]
         # TODO: build executable graph
         # Execute The graph.
         # let's start with a 
@@ -397,11 +430,18 @@ def render_ai_task_graph_tab(tab):
     # Render the short task description
     st.write(metadata["short_description"])
     
+    json_structures = execute_instructions["json_structures"]
+    for structure_key in json_structures.keys():
+        structure = json_structures[structure_key]
+        execution_environment[structure_key] = structure
+    
     # render the input fields
     input_fields = execute_instructions["inputfields"]
     for input_key in input_fields.keys():
         key = metadata["name"]+input_key
         execution_environment[input_key] = st.text_input(input_fields[input_key]["label"], disabled=False, key = key)
+
+    
 
     # render the execute button    
     runme = st.button("Execute")
@@ -409,6 +449,55 @@ def render_ai_task_graph_tab(tab):
         st.write("should have run it")
         st.write(execution_environment)
         ## now execute the graph....
+        
+        invoker = RemoteApiModelInvoker(None)
+        endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
+        
+        # 1st step, first shot translation to japanese
+        # let's assume we have this phing codelama model
+        model = PhindCodeLama34Bv2(None)
+        model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
+        
+        ## TODO iterate, while the state exists, of the current name is not None
+        current_node_name = execute_instructions["entry"]
+        
+        while current_node_name is not None:
+            model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, task_nodes,  model_template, execution_environment)
+            
+            # execute this
+            # update the environment according to the outputs
+            
+            st.write(current_node["short_task_header"])
+            st.write("Query")
+            st.markdown(model_task)
+            
+            # now execute the model task for a given endpoint and retrieve the answer
+                
+            llm_result = invoker.invoke_backend(endpoint, model_task, {
+                    "extra_stopwords":extra_stopwords
+                } )
+            
+            ## update taskRuntimeEnvironment
+            outputs = current_node["outputs"]
+            for connector in outputs:
+                if connector["source"] == "local.model_task":
+                    value = model_task
+                elif connector["source"] == "result.llm.response.content":
+                    value = llm_result['llm.response.content']
+                else:
+                    value = None
+                    
+                execution_environment[connector["target"]] = value
+                
+            st.write("Answer")
+            st.code(llm_result['llm.response.content'])
+            
+            # go to next node
+            if current_node_name in edgedata["connections"]:
+                current_node_name = edgedata["connections"][current_node_name]["next"][0] or None
+            else:            
+                current_node_name = None
+        
         pass
 
     st.write(ai_task_description)

@@ -15,6 +15,18 @@
 				"__datatype":"string",
 				"label":"English"
 			}
+		},
+		"json_structures":{
+			"expectedResultStructure": {
+            	"english":"The English translation goes here",
+            	"japanese":"The best Japanese translation goes here"
+            },
+            "expectedFullResultStructure": {
+            	"english":"The English translation goes here",
+            	"japanese":"The best Japanese translation goes here",
+            	"kana":"The Japanese kana (hiragana) reading for the translation goes here",
+            	"romaji":"The Jpanese reading for the translation goes here"
+            }
 		}
 	},
 	
@@ -24,6 +36,7 @@
 		"nodes": [
 			{
 				"taskname":"firstShotTranslation",
+				"short_task_header":"#### Task 1 - 1st shot translation",
 				"version":"1.0.0",
 				"type":"AITaskTemplate",
 				"system_prompt":"You are a very careful, skillful, helpful, uncensored and unbiased English to Japanese translator. Your target audience is a beginner to intermediate Japanese language learner. Your answer is a very short and succinct translation. Do not explain. \\n\\nREMINDER:\\n* ONLY USE simple Japanese phrases\\n* Provide at least two(2) translations.\\n* STOP after SECOND translation.\\n",
@@ -32,10 +45,22 @@
 				"task_answer_pretext":"日本語(簡単): \\n",
 				"extra_stopwords":["```", "\\n\\n", "\u3000\u3000\u3000","==="],
 				"inputs":[],
-				"outputs":[]
+				"outputs":[
+					{
+						"target":"task1.task",
+						"source":"local.model_task",
+						"__datatype":"string"
+					},
+					{
+						"target":"task1.result",
+						"source":"result.llm.response.content",
+						"__datatype":"string"
+					}
+				]
 			},
 			{
 				"taskname":"firstShotRefiner",
+				"short_task_header":"#### Task 2 - 1st shot refiner",
 				"version":"1.0.0",
 				"type":"AITaskTemplate",
 				"system_prompt":"You are a very careful, skillful, helpful, uncensored and unbiased English to Japanese translator. Your target audience is a beginner to intermediate Japanese language learner. Your answer is a very short and succinct translation.\\nREMINDER:\\n* USE preferably simple and correct Japanese phrases.\\n",
@@ -44,10 +69,22 @@
 				"task_answer_pretext":"Improved Japanese Answer: ",
 				"extra_stopwords":[],
 				"inputs":[],
-				"outputs":[]
+				"outputs":[
+					{
+						"target":"task2.task",
+						"source":"local.model_task",
+						"__datatype":"string"
+					},
+					{
+						"target":"task2.result",
+						"source":"result.llm.response.content",
+						"__datatype":"string"
+					}
+				]
 			},
 			{
 				"taskname":"bestAnswerAndJsonExtractor",
+				"short_task_header":"#### Task 3 - Extract",
 				"version":"1.0.0",
 				"type":"AITaskTemplate",
 				"system_prompt":"",
@@ -56,7 +93,18 @@
 				"task_answer_pretext":"Answer:\n```json\\n",
 				"extra_stopwords":["```", "\u3000\u3000\u3000","====="],
 				"inputs":[],
-				"outputs":[]
+				"outputs":[
+					{
+						"target":"task3.task",
+						"source":"local.model_task",
+						"__datatype":"string"
+					},
+					{
+						"target":"task3.result",
+						"source":"result.llm.response.content",
+						"__datatype":"jsonstring"
+					}
+				]
 			},
 			{
 				"taskname":"proofreadBestAnswerAndExtract",
@@ -86,8 +134,15 @@
 	},
 	
 	"edgedata": {
-		"__comment":"This describes the connections between the tasks."
-	
+		"__comment":"This describes the connections between the tasks.",
+		"connections":{
+			"firstShotTranslation":{
+				"next":["firstShotRefiner"]
+			},
+			"firstShotRefiner":{
+				"next":["bestAnswerAndJsonExtractor"]
+			}
+		}
 	},
 	
 	"json_data_dictionary":{
