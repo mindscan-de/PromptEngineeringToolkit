@@ -24,8 +24,7 @@
             "expectedFullResultStructure": {
             	"english":"The English translation goes here",
             	"japanese":"The best Japanese translation goes here",
-            	"kana":"The Japanese kana (hiragana) reading for the translation goes here",
-            	"romaji":"The Jpanese reading for the translation goes here"
+            	"kana":"The Japanese kana (hiragana) reading for the translation goes here"
             }
 		}
 	},
@@ -127,6 +126,11 @@
 						"target":"task4.result",
 						"source":"result.llm.response.content",
 						"__datatype":"jsonstring"
+					},
+					{
+						"target":"en2ja_result",
+						"source":"result.llm.response.content",
+						"__datatype":"jsonstring"
 					}
 				]
 			},
@@ -149,6 +153,11 @@
 					},
 					{
 						"target":"task5.result",
+						"source":"result.llm.response.content",
+						"__datatype":"string"
+					},
+					{
+						"target":"en2ja_quality",
 						"source":"result.llm.response.content",
 						"__datatype":"string"
 					}
