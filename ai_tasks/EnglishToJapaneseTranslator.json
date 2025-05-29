@@ -15,17 +15,6 @@
 				"__datatype":"string",
 				"label":"English"
 			}
-		},
-		"json_structures":{
-			"expectedResultStructure": {
-            	"english":"The English translation goes here",
-            	"japanese":"The best Japanese translation goes here"
-            },
-            "expectedFullResultStructure": {
-            	"english":"The English translation goes here",
-            	"japanese":"The best Japanese translation goes here",
-            	"kana":"The Japanese kana (hiragana) reading for the translation goes here"
-            }
 		}
 	},
 	
@@ -185,6 +174,15 @@
 	},
 	
 	"json_data_dictionary":{
+		"expectedResultStructure": {
+        	"english":"The English translation goes here",
+        	"japanese":"The best Japanese translation goes here"
+        },
+        "expectedFullResultStructure": {
+        	"english":"The English translation goes here",
+        	"japanese":"The best Japanese translation goes here",
+        	"kana":"The Japanese kana (hiragana) reading for the translation goes here, for simplicity add spaces between words"
+        }
 	}
 	
 }
