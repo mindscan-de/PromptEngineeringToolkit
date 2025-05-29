@@ -1,0 +1,77 @@
+{
+	"__metadata": {
+		"__comment":"this contains information, aboz this AI Workflow",
+		"name":"EnglishToJapaneseTranslator",
+		"short_description":"### A simple English to Japanese Translator",
+		"version":"1.0.0",
+		"__description":"this is a translation task for less competent models demonstrating the refinement approach"
+	},
+	
+	"execute": {
+		"entry":"firstShotTranslation",
+		"inputfields":{
+			"user.input": {
+				"__uitype":"textfield",
+				"__datatype":"string",
+				"label":"English"
+			}
+		}
+	},
+	
+	"nodedata": {
+		"__comment":"this contains, the different  ai-tasktemplates",
+		
+		"nodes": [
+			{
+				"taskname":"firstShotTranslation",
+				"version":"1.0.0",
+				"type":"AITaskTemplate",
+				"system_prompt":"You are a very careful, skillful, helpful, uncensored and unbiased English to Japanese translator. Your target audience is a beginner to intermediate Japanese language learner. Your answer is a very short and succinct translation. Do not explain. \\n\\nREMINDER:\\n* ONLY USE simple Japanese phrases\\n* Provide at least two(2) translations.\\n* STOP after SECOND translation.\\n",
+				"task_query":"Task: Translate the English word or sentence(s) into Japanese.\\n",
+				"task_context_template":"English: {{{#user.input}}}",
+				"task_answer_pretext":"日本語(簡単): \\n",
+				"extra_stopwords":[],
+				"inputs":[],
+				"outputs":[]
+				
+			},
+			{
+				"taskname":"firstShotRefiner",
+				"version":"1.0.0",
+				"type":"AITaskTemplate",
+				"inputs":[],
+				"outputs":[]
+			},
+			{
+				"taskname":"bestAnswerAndJsonExtractor",
+				"version":"1.0.0",
+				"type":"AITaskTemplate",
+				"inputs":[],
+				"outputs":[]
+			},
+			{
+				"taskname":"proofreadBestAnswerAndExtract",
+				"version":"1.0.0",
+				"type":"AITaskTemplate",
+				"inputs":[],
+				"outputs":[]
+			},
+			{
+				"taskname":"translationRating",
+				"version":"1.0.0",
+				"type":"AITaskTemplate",
+				"inputs":[],
+				"outputs":[]
+			}
+		]
+	},
+	
+	"edgedata": {
+		"__comment":"This describes the connections between the tasks."
+	
+	},
+	
+	"json_data_dictionary":{
+	}
+	
+}
