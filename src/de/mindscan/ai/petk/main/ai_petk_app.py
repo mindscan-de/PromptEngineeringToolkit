@@ -422,6 +422,7 @@ def render_ai_task_graph_tab(tab):
         task_nodes = ai_task_description["nodedata"]['nodes']
         metadata = ai_task_description["__metadata"]
         edgedata = ai_task_description["edgedata"]
+        jsondata_dictionary = ai_task_description["json_data_dictionary"]
         # TODO: build executable graph
         # Execute The graph.
         # let's start with a 
@@ -430,10 +431,9 @@ def render_ai_task_graph_tab(tab):
     # Render the short task description
     st.write(metadata["short_description"])
     
-    json_structures = execute_instructions["json_structures"]
-    for structure_key in json_structures.keys():
-        structure = json_structures[structure_key]
-        execution_environment[structure_key] = structure
+    for json_key in jsondata_dictionary.keys():
+        structure = jsondata_dictionary[json_key]
+        execution_environment[json_key] = structure
     
     # render the input fields
     input_fields = execute_instructions["inputfields"]
