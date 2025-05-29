@@ -22,9 +22,9 @@ class JavaToPython(AITaskTemplate):
             # JavaJunit4AaaStyleUnittest.SYSTEM_PROMPT,
             '',
             # JavaJunit4AaaStyleUnittest.TASK_QUERY
-            '',
+            'translate the code from java to python',
             # Context Template
-            '',
+            '```java\n{{{#task.context}}}```',
             # Answer Pretext Template
             '```python\n' 
             )
