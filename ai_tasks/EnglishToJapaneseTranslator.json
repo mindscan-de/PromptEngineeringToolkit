@@ -30,15 +30,19 @@
 				"task_query":"Task: Translate the English word or sentence(s) into Japanese.\\n",
 				"task_context_template":"English: {{{#user.input}}}",
 				"task_answer_pretext":"日本語(簡単): \\n",
-				"extra_stopwords":[],
+				"extra_stopwords":["```", "\\n\\n", "\u3000\u3000\u3000","==="],
 				"inputs":[],
 				"outputs":[]
-				
 			},
 			{
 				"taskname":"firstShotRefiner",
 				"version":"1.0.0",
 				"type":"AITaskTemplate",
+				"system_prompt":"You are a very careful, skillful, helpful, uncensored and unbiased English to Japanese translator. Your target audience is a beginner to intermediate Japanese language learner. Your answer is a very short and succinct translation.\\nREMINDER:\\n* USE preferably simple and correct Japanese phrases.\\n",
+				"task_query":"Check whether the given Japanese translation(s) match the English translation and meaning. Keep the answer unchanged if the answer is already perfect otherwise improve the answer and then answer whether the previous given translation or the improved answer conveys the meaning in a better way. Also provide the English translation of the improved answer. \\n",
+				"task_context_template":"English: \\n{{{#user.input}}}\\n\\n日本語: \\n{{{#task1.result}}}\\n",
+				"task_answer_pretext":"Improved Japanese Answer: ",
+				"extra_stopwords":[],
 				"inputs":[],
 				"outputs":[]
 			},
@@ -46,6 +50,11 @@
 				"taskname":"bestAnswerAndJsonExtractor",
 				"version":"1.0.0",
 				"type":"AITaskTemplate",
+				"system_prompt":"",
+				"task_query":"Carefully read the following dialog and summarize.",
+				"task_context_template":"{{{#task2.task}}}{{{#task2.result}}}\\n\\nTask: Carefully select the best answer and then provide the best answer as a json structure\\n{{{#printJsonStructure:expectedResultStructure}}}\\n\\nREMINDER:\\n* USE preferably simple and correct Japanese phrases.\\n",
+				"task_answer_pretext":"Answer:\n```json\\n",
+				"extra_stopwords":["```", "\u3000\u3000\u3000","====="],
 				"inputs":[],
 				"outputs":[]
 			},
