@@ -1,6 +1,5 @@
 {
 	"__metadata": {
-		"__comment":"this contains information, aboz this AI Workflow",
 		"name":"EnglishToJapaneseTranslator",
 		"short_description":"### A simple English to Japanese Translator",
 		"version":"1.0.0",
