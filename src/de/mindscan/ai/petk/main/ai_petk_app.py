@@ -411,303 +411,199 @@ def buildModelTaskFromJson(current_node_name, task_nodes, model_template, taskRu
 
 
 def render_ai_task_graph_tab(tab):
-    execute_instructions = {}
-    task_nodes = []
-    execution_environment = {}
-
-    with open("../../../../../../ai_tasks/EnglishToJapaneseTranslator.json",'r', encoding='utf-8') as json_file:
-        ai_task_description = json.load(json_file)
-        
-        execute_instructions = ai_task_description["execute"]
-        task_nodes = ai_task_description["nodedata"]['nodes']
-        metadata = ai_task_description["__metadata"]
-        edgedata = ai_task_description["edgedata"]
-        jsondata_dictionary = ai_task_description["json_data_dictionary"]
-        # TODO: build executable graph
-        # Execute The graph.
-        # let's start with a 
-        pass
-
-    # Render the short task description
-    st.write(metadata["short_description"])
+    with tab:
+        execute_instructions = {}
+        task_nodes = []
+        execution_environment = {}
     
-    for json_key in jsondata_dictionary.keys():
-        structure = jsondata_dictionary[json_key]
-        execution_environment[json_key] = structure
+        with open("../../../../../../ai_tasks/StableDiffusionTiPersonDataPruning.json",'r', encoding='utf-8') as json_file:
+            ai_task_description = json.load(json_file)
+            
+            execute_instructions = ai_task_description["execute"]
+            task_nodes = ai_task_description["nodedata"]['nodes']
+            metadata = ai_task_description["__metadata"]
+            edgedata = ai_task_description["edgedata"]
+            jsondata_dictionary = ai_task_description["json_data_dictionary"]
+            # TODO: build executable graph
+            # Execute The graph.
+            # let's start with a 
+            pass
     
-    # render the input fields
-    input_fields = execute_instructions["inputfields"]
-    for input_key in input_fields.keys():
-        key = metadata["name"]+input_key
-        execution_environment[input_key] = st.text_input(input_fields[input_key]["label"], disabled=False, key = key)
-
+        # Render the short task description
+        st.write(metadata["short_description"])
+        
+        for json_key in jsondata_dictionary.keys():
+            structure = jsondata_dictionary[json_key]
+            execution_environment[json_key] = structure
+        
+        # render the input fields
+        input_fields = execute_instructions["inputfields"]
+        for input_key in input_fields.keys():
+            key = metadata["name"]+input_key
+            
+            if input_fields[input_key]["__uitype"]=="textfield":
+                execution_environment[input_key] = st.text_input(input_fields[input_key]["label"], disabled=False, key = key)
+            elif input_fields[input_key]["__uitype"]=="selectone":
+                execution_environment[input_key] = st.selectbox(input_fields[input_key]["label"], input_fields[input_key]["options"], key = key)
     
-
-    # render the execute button    
-    runme = st.button("Execute")
-    if(runme):
-        st.write("should have run it")
-        st.write(execution_environment)
-        ## now execute the graph....
         
-        invoker = RemoteApiModelInvoker(None)
-        endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
-        
-        # 1st step, first shot translation to japanese
-        # let's assume we have this phing codelama model
-        model = PhindCodeLama34Bv2(None)
-        model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
-        
-        ## TODO iterate, while the state exists, of the current name is not None
-        current_node_name = execute_instructions["entry"]
-        
-        while current_node_name is not None:
-            model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, task_nodes,  model_template, execution_environment)
+    
+        # render the execute button    
+        runme = st.button("Execute",key=metadata["name"]+".execute")
+        if(runme):
+            st.write("should have run it")
+            st.write(execution_environment)
+            ## now execute the graph....
             
-            # execute this
-            # update the environment according to the outputs
+            invoker = RemoteApiModelInvoker(None)
+            endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
             
-            st.write(current_node["short_task_header"])
-            st.write("Query")
-            st.markdown(model_task)
+            # 1st step, first shot translation to japanese
+            # let's assume we have this phing codelama model
+            model = PhindCodeLama34Bv2(None)
+            model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
             
-            # now execute the model task for a given endpoint and retrieve the answer
+            ## TODO iterate, while the state exists, of the current name is not None
+            current_node_name = execute_instructions["entry"]
+            
+            while current_node_name is not None:
+                model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, task_nodes,  model_template, execution_environment)
                 
-            llm_result = invoker.invoke_backend(endpoint, model_task, {
-                    "extra_stopwords":extra_stopwords
-                } )
-            
-            ## update taskRuntimeEnvironment
-            outputs = current_node["outputs"]
-            for connector in outputs:
-                if connector["source"] == "local.model_task":
-                    value = model_task
-                elif connector["source"] == "result.llm.response.content":
-                    value = llm_result['llm.response.content']
-                else:
-                    value = None
+                # execute this
+                # update the environment according to the outputs
+                
+                st.write(current_node["short_task_header"])
+                st.write("Query")
+                st.markdown(model_task)
+                
+                # now execute the model task for a given endpoint and retrieve the answer
                     
-                execution_environment[connector["target"]] = value
+                llm_result = invoker.invoke_backend(endpoint, model_task, {
+                        "extra_stopwords":extra_stopwords
+                    } )
                 
-            st.write("Answer")
-            st.code(llm_result['llm.response.content'])
+                ## update taskRuntimeEnvironment
+                outputs = current_node["outputs"]
+                for connector in outputs:
+                    if connector["source"] == "local.model_task":
+                        value = model_task
+                    elif connector["source"] == "result.llm.response.content":
+                        value = llm_result['llm.response.content']
+                    else:
+                        value = None
+                        
+                    execution_environment[connector["target"]] = value
+                    
+                st.write("Answer")
+                st.code(llm_result['llm.response.content'])
+                
+                # go to next node
+                if current_node_name in edgedata["connections"]:
+                    current_node_name = edgedata["connections"][current_node_name]["next"][0] or None
+                else:            
+                    current_node_name = None
             
-            # go to next node
-            if current_node_name in edgedata["connections"]:
-                current_node_name = edgedata["connections"][current_node_name]["next"][0] or None
-            else:            
-                current_node_name = None
+            pass
+    
+        st.write(ai_task_description)
         
         pass
-
-    st.write(ai_task_description)
-    
     pass
     
 def render_translator_test_tab(tab):
     with tab:
-        return
-        st.write("### English to japanese translator")
-        
-        english_input = st.text_input("English",disabled=False, key="en2jp_translator.user_input")
-        st.write("Input: " + english_input)
-        
-        input = {
-            "user.input":english_input
-            }
-        
-        template_engine = AIPETKTemplateEngine(None)
-        
-        # 1st step, first shot translation to japanese
-        # let's assume we have this phing codelama model
-        model = PhindCodeLama34Bv2(None)
-        model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
-        #st.code(model_template)
-        
-        
-        # ----------------
-        
-        st.write("#### Task 1 - 1st shot translation")
-        
-        en2jp_firstshot = EnglishToJapanese_FirstShotTranslation(None)
-        model_task, extra_stopwords = buildModelTask(en2jp_firstshot, model_template, input)
-        
-        st.write("Query")
-        st.code(model_task)
-        
-        # now execute the model task for a given endpoint and retrieve the answer
-        invoker = RemoteApiModelInvoker(None)
+        execute_instructions = {}
+        task_nodes = []
+        execution_environment = {}
+    
+        with open("../../../../../../ai_tasks/EnglishToJapaneseTranslator.json",'r', encoding='utf-8') as json_file:
+            ai_task_description = json.load(json_file)
             
-        endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
-        result_1stshot = invoker.invoke_backend(endpoint, model_task, {
-                "extra_stopwords":extra_stopwords
-            } )
+            execute_instructions = ai_task_description["execute"]
+            task_nodes = ai_task_description["nodedata"]['nodes']
+            metadata = ai_task_description["__metadata"]
+            edgedata = ai_task_description["edgedata"]
+            jsondata_dictionary = ai_task_description["json_data_dictionary"]
+            # TODO: build executable graph
+            # Execute The graph.
+            # let's start with a 
+            pass
+    
+        # Render the short task description
+        st.write(metadata["short_description"])
         
-        ## update taskRuntimeEnvironment
-        input['task1.task'] = model_task
-        input['task1.result'] = result_1stshot['llm.response.content']
+        for json_key in jsondata_dictionary.keys():
+            structure = jsondata_dictionary[json_key]
+            execution_environment[json_key] = structure
         
-        st.write("Answer")
-        st.code(input['task1.result'])
+        # render the input fields
+        input_fields = execute_instructions["inputfields"]
+        for input_key in input_fields.keys():
+            key = metadata["name"]+input_key
+            execution_environment[input_key] = st.text_input(input_fields[input_key]["label"], disabled=False, key = key)
+    
         
+    
+        # render the execute button    
+        runme = st.button("Execute")
+        if(runme):
+            st.write("should have run it")
+            st.write(execution_environment)
+            ## now execute the graph....
+            
+            invoker = RemoteApiModelInvoker(None)
+            endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
+            
+            # 1st step, first shot translation to japanese
+            # let's assume we have this phing codelama model
+            model = PhindCodeLama34Bv2(None)
+            model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
+            
+            ## TODO iterate, while the state exists, of the current name is not None
+            current_node_name = execute_instructions["entry"]
+            
+            while current_node_name is not None:
+                model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, task_nodes,  model_template, execution_environment)
+                
+                # execute this
+                # update the environment according to the outputs
+                
+                st.write(current_node["short_task_header"])
+                st.write("Query")
+                st.markdown(model_task)
+                
+                # now execute the model task for a given endpoint and retrieve the answer
+                    
+                llm_result = invoker.invoke_backend(endpoint, model_task, {
+                        "extra_stopwords":extra_stopwords
+                    } )
+                
+                ## update taskRuntimeEnvironment
+                outputs = current_node["outputs"]
+                for connector in outputs:
+                    if connector["source"] == "local.model_task":
+                        value = model_task
+                    elif connector["source"] == "result.llm.response.content":
+                        value = llm_result['llm.response.content']
+                    else:
+                        value = None
+                        
+                    execution_environment[connector["target"]] = value
+                    
+                st.write("Answer")
+                st.code(llm_result['llm.response.content'])
+                
+                # go to next node
+                if current_node_name in edgedata["connections"]:
+                    current_node_name = edgedata["connections"][current_node_name]["next"][0] or None
+                else:            
+                    current_node_name = None
+            
+            pass
+    
+        st.write(ai_task_description)
         
-        # ----------------------------------------
-        
-        st.write("#### Task 2 - 1st shot refiner")
-        
-        en2jp_firstshotrefiner = EnglishToJapanese_FirstShotRefiner(None)
-        
-        system_prompt = en2jp_firstshotrefiner.get_systemm_prompt()
-        query = en2jp_firstshotrefiner.get_task_query()
-        context_template = en2jp_firstshotrefiner.get_task_context_template()
-        pretext_template = en2jp_firstshotrefiner.get_task_answer_pretext_template()
-        extra_stopwords = en2jp_firstshotrefiner.get_extra_stopwords()
-        
-        context = template_engine.evaluateTemplate(context_template, input)
-        pretext = template_engine.evaluateTemplate(pretext_template, input)
-        
-        # now fill the model template
-        task_data = {
-            'system.prompt':system_prompt,
-            'query':query,
-            'context':context,
-            'pretext':pretext,
-            } 
-
-        model_task = template_engine.evaluateTemplate(model_template, task_data)
-        st.write("Query")
-        st.code(model_task)
-        
-        result_1stshotrefiner = invoker.invoke_backend(endpoint, model_task, {
-                "extra_stopwords":extra_stopwords
-            } )
-        
-        input['task2.task'] = model_task
-        input['task2.result'] = result_1stshotrefiner['llm.response.content']
-        
-        st.write("Answer")
-        st.code(input['task2.result'])
-        
-        # -----------------------------------
-        st.write("#### Task 3 - Extract")
-        
-        en2jp_extractbestanswer = EnglishToJapanese_BestAnswerJsonExtractor(None)
-        
-        system_prompt = en2jp_extractbestanswer.get_systemm_prompt()
-        query = en2jp_extractbestanswer.get_task_query()
-        context_template = en2jp_extractbestanswer.get_task_context_template()
-        pretext_template = en2jp_extractbestanswer.get_task_answer_pretext_template()
-        extra_stopwords = en2jp_extractbestanswer.get_extra_stopwords()
-        
-        input['expectedResultStructure'] = {
-            "english":"The English translation goes here",
-            "japanese":"The best Japanese translation goes here",
-            }
-        
-        input['expectedFullResultStructure'] = {
-            "english":"The English translation goes here",
-            "japanese":"The best Japanese translation goes here",
-            "kana":"The Japanese kana (hiragana) reading for the translation goes here",
-            "romaji":"The Jpanese reading for the translation goes here"
-            }
-        
-        
-        context = template_engine.evaluateTemplate(context_template, input)
-        pretext = template_engine.evaluateTemplate(pretext_template, input)
-
-        # now fill the model template
-        task_data = {
-            'system.prompt':system_prompt,
-            'query':query,
-            'context':context,
-            'pretext':pretext,
-            } 
-
-        
-        model_task = template_engine.evaluateTemplate(model_template, task_data)
-        st.write("Query")
-        st.code(model_task)
-        
-        result_extractor = invoker.invoke_backend(endpoint, model_task, {
-                "extra_stopwords":extra_stopwords
-            } )
-        
-        input['task3.task'] = model_task
-        input['task3.result'] = result_extractor['llm.response.content']
-
-        st.write("Answer")
-        st.code(result_extractor['llm.response.content'], language="json")
-        
-        # -----------------------------------
-        st.write("#### Task 4 - Proofread Answer")
-        
-        en2jp_proofreader = EnglishToJapanese_ProofreadBestAnswerAndExtract(None)
-        
-        system_prompt = en2jp_proofreader.get_systemm_prompt()
-        query = en2jp_proofreader.get_task_query()
-        context_template = en2jp_proofreader.get_task_context_template()
-        pretext_template = en2jp_proofreader.get_task_answer_pretext_template()
-        extra_stopwords = en2jp_proofreader.get_extra_stopwords()
-        
-        context = template_engine.evaluateTemplate(context_template, input)
-        pretext = template_engine.evaluateTemplate(pretext_template, input)
-
-        # now fill the model template
-        task_data = {
-            'system.prompt':system_prompt,
-            'query':query,
-            'context':context,
-            'pretext':pretext,
-            } 
-        
-        model_task = template_engine.evaluateTemplate(model_template, task_data)
-        st.write("Query")
-        st.code(model_task)
-
-        result_proofread = invoker.invoke_backend(endpoint, model_task, {
-                "extra_stopwords":extra_stopwords
-            } )
-        
-        input['task4.task'] = model_task
-        input['task4.result'] = result_proofread['llm.response.content']
-        
-        st.write("Answer")
-        st.code(result_proofread['llm.response.content'], language="json")
-
-        # -----------------------------------
-        st.write("#### Task 5 - Answer rating")
-        
-        en2jp_rating = EnglishToJapanese_TranslationRating(None)
-        
-        system_prompt = en2jp_rating.get_systemm_prompt()
-        query = en2jp_rating.get_task_query()
-        context_template = en2jp_rating.get_task_context_template()
-        pretext_template = en2jp_rating.get_task_answer_pretext_template()
-        extra_stopwords = en2jp_rating.get_extra_stopwords()
-        
-        context = template_engine.evaluateTemplate(context_template, input)
-        pretext = template_engine.evaluateTemplate(pretext_template, input)
-
-        # now fill the model template
-        task_data = {
-            'system.prompt':system_prompt,
-            'query':query,
-            'context':context,
-            'pretext':pretext,
-            } 
-        
-        model_task = template_engine.evaluateTemplate(model_template, task_data)
-        st.write("Query")
-        st.code(model_task)
-
-        result_proofread = invoker.invoke_backend(endpoint, model_task, {
-                "extra_stopwords":extra_stopwords
-            } )
-        
-        input['task5.task'] = model_task
-        input['task5.result'] = result_proofread['llm.response.content']
-        st.write("Answer")
-        st.code(result_proofread['llm.response.content'], language="json")
+        pass
         
         
 ## ----------------------------
