@@ -16,6 +16,7 @@ class AIPETKTemplateEngine(object):
     FUN_TO_FIRST_UPPER = "toFirstUpper"
     FUN_PRINT_JSON_STRUCTURE = "printJsonStructure"
     FUN_APPEND_AS_JSON_STRING = "appendAsJsonString"
+    FUN_TRIM = "trim"
     
 
     REPLACEMENT_IF_FUNCTION_UNKNOWN = 'UNKNOWN_FUNCTION'
@@ -63,6 +64,7 @@ class AIPETKTemplateEngine(object):
                 AIPETKTemplateEngine.FUN_TO_FIRST_UPPER: lambda: self.to_first_upper(self.get_key_from_map(function_selector[1].strip(), value_map).strip()),
                 AIPETKTemplateEngine.FUN_PRINT_JSON_STRUCTURE: lambda: self.print_json_structure(self.get_key_from_map(function_selector[1].strip(), value_map)),
                 AIPETKTemplateEngine.FUN_APPEND_AS_JSON_STRING: lambda: self.append_as_json_string(self.get_key_from_map(function_selector[1].strip(), value_map)),
+                AIPETKTemplateEngine.FUN_TRIM: lambda: self.trim(self.get_key_from_map(function_selector[1].strip(), value_map))
             }
             func = switch.get(function_selector[0], lambda: self.REPLACEMENT_IF_FUNCTION_UNKNOWN)
             return func()
@@ -74,6 +76,10 @@ class AIPETKTemplateEngine(object):
         if len(value) >= 2:
             return value[0].upper() + value[1:]
         return value.upper()
+    
+    @staticmethod
+    def trim(value:str):
+        return value.strip()
 
     @staticmethod
     def get_key_from_map(selector, value_map):
