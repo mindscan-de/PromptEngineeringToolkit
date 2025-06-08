@@ -27,7 +27,6 @@ SOFTWARE.
 '''
 
 import streamlit as st
-import os
 import json
 
 from de.mindscan.ai.petk.llmaccess.lm_apitypes import get_RemoteApiTypes
@@ -38,11 +37,6 @@ from de.mindscan.ai.petk.llmaccess.lm_modeltypes import get_ModelTypes
 from de.mindscan.ai.petk.taskaccess.aitask.ai_tasktemplates import get_ai_task_tasktemplates
 from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
 from de.mindscan.ai.petk.llmaccess.translate.modeltypes.PhindCodeLama34Bv2 import PhindCodeLama34Bv2
-from de.mindscan.ai.petk.taskaccess.aitask.hardcodedtemplate.EnglishToJapaneseTasks import EnglishToJapanese_FirstShotTranslation,\
-    EnglishToJapanese_FirstShotRefiner,\
-    EnglishToJapanese_BestAnswerJsonExtractor,\
-    EnglishToJapanese_ProofreadBestAnswerAndExtract,\
-    EnglishToJapanese_TranslationRating
 
 # Set the wide mode and application name
 st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
@@ -416,7 +410,7 @@ def render_ai_task_graph_tab(tab):
         task_nodes = []
         execution_environment = {}
     
-        with open("../../../../../../ai_tasks/StableDiffusionTiPersonDataPruning.json",'r', encoding='utf-8') as json_file:
+        with open("../../../../../../ai_tasks/StableDiffusionTiPersonDataPruning2.json",'r', encoding='utf-8') as json_file:
             ai_task_description = json.load(json_file)
             
             execute_instructions = ai_task_description["execute"]
@@ -445,8 +439,13 @@ def render_ai_task_graph_tab(tab):
                 execution_environment[input_key] = st.text_input(input_fields[input_key]["label"], disabled=False, key = key)
             elif input_fields[input_key]["__uitype"]=="selectone":
                 execution_environment[input_key] = st.selectbox(input_fields[input_key]["label"], input_fields[input_key]["options"], key = key)
-    
-        
+            elif input_fields[input_key]["__uitype"]=="singlefileupload":
+                inputfile = st.file_uploader(input_fields[input_key]["label"], accept_multiple_files=False,key=input_key)
+                if inputfile is not None:
+                    # TODO depending on the satatype we should convert the input.
+                    execution_environment[input_key] = inputfile.getvalue().decode("utf-8")
+                else:
+                    execution_environment[input_key] = "empty"
     
         # render the execute button    
         runme = st.button("Execute",key=metadata["name"]+".execute")
