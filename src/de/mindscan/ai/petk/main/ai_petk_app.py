@@ -403,14 +403,78 @@ def buildModelTaskFromJson(current_node_name, task_nodes, model_template, taskRu
 
     return model_task, extra_stopwords, current_node
 
+# Basic workflow execution extraction
+def executeWorkflow(execution_environment, execute_instructions, task_nodes, edgedata):
+            
+    st.write("should have run it")
+    st.write(execution_environment)
+    ## now execute the graph....
+    
+    invoker = RemoteApiModelInvoker(None)
+    endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
+    
+    # 1st step, first shot translation to japanese
+    # let's assume we have this phing codelama model
+    model = PhindCodeLama34Bv2(None)
+    model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
+    
+    ## TODO iterate, while the state exists, of the current name is not None
+    current_node_name = execute_instructions["entry"]
+    
+    while current_node_name is not None:
+        model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, task_nodes,  model_template, execution_environment)
+        
+        # execute this
+        # update the environment according to the outputs
+        
+        st.write(current_node["short_task_header"])
+        st.write("Query")
+        st.markdown(model_task)
+        
+        # now execute the model task for a given endpoint and retrieve the answer
+            
+        llm_result = invoker.invoke_backend(endpoint, model_task, {
+                "extra_stopwords":extra_stopwords
+            } )
+        
+        ## update taskRuntimeEnvironment
+        outputs = current_node["outputs"]
+        for connector in outputs:
+            if connector["source"] == "local.model_task":
+                value = model_task
+            elif connector["source"] == "result.llm.response.content":
+                value = llm_result['llm.response.content']
+            else:
+                value = None
+                
+            execution_environment[connector["target"]] = value
+            
+        st.write("Answer")
+        st.code(llm_result['llm.response.content'])
+        
+        # go to next node
+        if current_node_name in edgedata["connections"]:
+            current_node_name = edgedata["connections"][current_node_name]["next"][0] or None
+        else:            
+            current_node_name = None
+    
+    # Now do process the output nodes
+    
+    st.write("Final Value for the execution environment:")
+    st.code(execution_environment,language="json")        
+    
+    pass
+
 
 def render_ai_task_graph_tab(tab):
     with tab:
+        workflow_file = "../../../../../../ai_tasks/StableDiffusionTiPersonDataPruning2.json"
+        
         execute_instructions = {}
         task_nodes = []
         execution_environment = {}
-    
-        with open("../../../../../../ai_tasks/StableDiffusionTiPersonDataPruning2.json",'r', encoding='utf-8') as json_file:
+        
+        with open(workflow_file ,'r', encoding='utf-8') as json_file:
             ai_task_descriptor = json.load(json_file)
             
             execute_instructions = ai_task_descriptor["execute"]
@@ -418,17 +482,13 @@ def render_ai_task_graph_tab(tab):
             metadata = ai_task_descriptor["__metadata"]
             edgedata = ai_task_descriptor["edgedata"]
             jsondata_dictionary = ai_task_descriptor["json_data_dictionary"]
-            # TODO: build executable graph
-            # Execute The graph.
-            # let's start with a 
-            pass
-    
-        # Render the short task description
-        st.write(metadata["short_description"])
         
         for json_key in jsondata_dictionary.keys():
             structure = jsondata_dictionary[json_key]
             execution_environment[json_key] = structure
+    
+        # Render the short task description
+        st.write(metadata["short_description"])
         
         # render the input fields
         input_fields = execute_instructions["inputfields"]
@@ -452,61 +512,7 @@ def render_ai_task_graph_tab(tab):
         # render the execute button    
         runme = st.button("Execute",key=metadata["name"]+".execute")
         if(runme):
-            st.write("should have run it")
-            st.write(execution_environment)
-            ## now execute the graph....
-            
-            invoker = RemoteApiModelInvoker(None)
-            endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
-            
-            # 1st step, first shot translation to japanese
-            # let's assume we have this phing codelama model
-            model = PhindCodeLama34Bv2(None)
-            model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
-            
-            ## TODO iterate, while the state exists, of the current name is not None
-            current_node_name = execute_instructions["entry"]
-            
-            while current_node_name is not None:
-                model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, task_nodes,  model_template, execution_environment)
-                
-                # execute this
-                # update the environment according to the outputs
-                
-                st.write(current_node["short_task_header"])
-                st.write("Query")
-                st.markdown(model_task)
-                
-                # now execute the model task for a given endpoint and retrieve the answer
-                    
-                llm_result = invoker.invoke_backend(endpoint, model_task, {
-                        "extra_stopwords":extra_stopwords
-                    } )
-                
-                ## update taskRuntimeEnvironment
-                outputs = current_node["outputs"]
-                for connector in outputs:
-                    if connector["source"] == "local.model_task":
-                        value = model_task
-                    elif connector["source"] == "result.llm.response.content":
-                        value = llm_result['llm.response.content']
-                    else:
-                        value = None
-                        
-                    execution_environment[connector["target"]] = value
-                    
-                st.write("Answer")
-                st.code(llm_result['llm.response.content'])
-                
-                # go to next node
-                if current_node_name in edgedata["connections"]:
-                    current_node_name = edgedata["connections"][current_node_name]["next"][0] or None
-                else:            
-                    current_node_name = None
-            
-            # Now do process the output nodes
-            
-            st.write(execution_environment)        
+            executeWorkflow(execution_environment, execute_instructions, task_nodes, edgedata)
     
         st.write(ai_task_descriptor)
         pass
@@ -514,11 +520,13 @@ def render_ai_task_graph_tab(tab):
     
 def render_translator_test_tab(tab):
     with tab:
+        workflow_file = "../../../../../../ai_tasks/EnglishToJapaneseTranslator.json"
+        
         execute_instructions = {}
         task_nodes = []
         execution_environment = {}
-    
-        with open("../../../../../../ai_tasks/EnglishToJapaneseTranslator.json",'r', encoding='utf-8') as json_file:
+        
+        with open(workflow_file,'r', encoding='utf-8') as json_file:
             ai_task_description = json.load(json_file)
             
             execute_instructions = ai_task_description["execute"]
@@ -526,17 +534,14 @@ def render_translator_test_tab(tab):
             metadata = ai_task_description["__metadata"]
             edgedata = ai_task_description["edgedata"]
             jsondata_dictionary = ai_task_description["json_data_dictionary"]
-            # TODO: build executable graph
-            # Execute The graph.
-            # let's start with a 
             pass
-    
-        # Render the short task description
-        st.write(metadata["short_description"])
         
         for json_key in jsondata_dictionary.keys():
             structure = jsondata_dictionary[json_key]
             execution_environment[json_key] = structure
+        
+        # Render the short task description
+        st.write(metadata["short_description"])
         
         # render the input fields
         input_fields = execute_instructions["inputfields"]
@@ -549,59 +554,7 @@ def render_translator_test_tab(tab):
         # render the execute button    
         runme = st.button("Execute")
         if(runme):
-            st.write("should have run it")
-            st.write(execution_environment)
-            ## now execute the graph....
-            
-            invoker = RemoteApiModelInvoker(None)
-            endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
-            
-            # 1st step, first shot translation to japanese
-            # let's assume we have this phing codelama model
-            model = PhindCodeLama34Bv2(None)
-            model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
-            
-            ## TODO iterate, while the state exists, of the current name is not None
-            current_node_name = execute_instructions["entry"]
-            
-            while current_node_name is not None:
-                model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, task_nodes,  model_template, execution_environment)
-                
-                # execute this
-                # update the environment according to the outputs
-                
-                st.write(current_node["short_task_header"])
-                st.write("Query")
-                st.markdown(model_task)
-                
-                # now execute the model task for a given endpoint and retrieve the answer
-                    
-                llm_result = invoker.invoke_backend(endpoint, model_task, {
-                        "extra_stopwords":extra_stopwords
-                    } )
-                
-                ## update taskRuntimeEnvironment
-                outputs = current_node["outputs"]
-                for connector in outputs:
-                    if connector["source"] == "local.model_task":
-                        value = model_task
-                    elif connector["source"] == "result.llm.response.content":
-                        value = llm_result['llm.response.content']
-                    else:
-                        value = None
-                        
-                    execution_environment[connector["target"]] = value
-                    
-                st.write("Answer")
-                st.code(llm_result['llm.response.content'])
-                
-                # go to next node
-                if current_node_name in edgedata["connections"]:
-                    current_node_name = edgedata["connections"][current_node_name]["next"][0] or None
-                else:            
-                    current_node_name = None
-            
-            pass
+            executeWorkflow(execution_environment, execute_instructions, task_nodes, edgedata)
     
         st.write(ai_task_description)
         
