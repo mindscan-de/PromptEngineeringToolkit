@@ -1,6 +1,6 @@
 {
 	"__metadata":{
-		"name":"SDTextualInversionNSFWCleanup",
+		"name":"SDTextualInversionCleanup",
 		"short_description":"### SD-TextualInversion Cleanup",
 		"version":"1.0.0",
 		"__description":"This is a helper to cleanup Danbooru tags to improve the tags to create improved Textual Inversions" 
