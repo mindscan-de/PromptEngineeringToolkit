@@ -411,13 +411,13 @@ def render_ai_task_graph_tab(tab):
         execution_environment = {}
     
         with open("../../../../../../ai_tasks/StableDiffusionTiPersonDataPruning2.json",'r', encoding='utf-8') as json_file:
-            ai_task_description = json.load(json_file)
+            ai_task_descriptor = json.load(json_file)
             
-            execute_instructions = ai_task_description["execute"]
-            task_nodes = ai_task_description["nodedata"]['nodes']
-            metadata = ai_task_description["__metadata"]
-            edgedata = ai_task_description["edgedata"]
-            jsondata_dictionary = ai_task_description["json_data_dictionary"]
+            execute_instructions = ai_task_descriptor["execute"]
+            task_nodes = ai_task_descriptor["nodedata"]['nodes']
+            metadata = ai_task_descriptor["__metadata"]
+            edgedata = ai_task_descriptor["edgedata"]
+            jsondata_dictionary = ai_task_descriptor["json_data_dictionary"]
             # TODO: build executable graph
             # Execute The graph.
             # let's start with a 
@@ -444,6 +444,8 @@ def render_ai_task_graph_tab(tab):
                 if inputfile is not None:
                     # TODO depending on the satatype we should convert the input.
                     execution_environment[input_key] = inputfile.getvalue().decode("utf-8")
+                    execution_environment[input_key+".filename"] = inputfile.name
+                    
                 else:
                     execution_environment[input_key] = "empty"
     
@@ -502,10 +504,11 @@ def render_ai_task_graph_tab(tab):
                 else:            
                     current_node_name = None
             
-            pass
+            # Now do process the output nodes
+            
+            st.write(execution_environment)        
     
-        st.write(ai_task_description)
-        
+        st.write(ai_task_descriptor)
         pass
     pass
     
