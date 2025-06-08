@@ -403,6 +403,26 @@ def buildModelTaskFromJson(current_node_name, task_nodes, model_template, taskRu
 
     return model_task, extra_stopwords, current_node
 
+
+
+def prepareWorkflow(workflow_file):
+    execute_instructions = {}
+    task_nodes = []
+    execution_environment = {}
+    with open(workflow_file, 'r', encoding='utf-8') as json_file:
+        ai_task_descriptor = json.load(json_file)
+        execute_instructions = ai_task_descriptor["execute"]
+        task_nodes = ai_task_descriptor["nodedata"]['nodes']
+        metadata = ai_task_descriptor["__metadata"]
+        edgedata = ai_task_descriptor["edgedata"]
+        jsondata_dictionary = ai_task_descriptor["json_data_dictionary"]
+    for json_key in jsondata_dictionary.keys():
+        structure = jsondata_dictionary[json_key]
+        execution_environment[json_key] = structure
+    
+    return metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor
+
+
 # Basic workflow execution extraction
 def executeWorkflow(execution_environment, execute_instructions, task_nodes, edgedata):
             
@@ -424,33 +444,42 @@ def executeWorkflow(execution_environment, execute_instructions, task_nodes, edg
     while current_node_name is not None:
         model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, task_nodes,  model_template, execution_environment)
         
-        # execute this
-        # update the environment according to the outputs
-        
-        st.write(current_node["short_task_header"])
-        st.write("Query")
-        st.markdown(model_task)
-        
-        # now execute the model task for a given endpoint and retrieve the answer
+        current_node_type = current_node["type"] 
+        if current_node_type is "AITaskTemplate":
+            # execute this
+            # update the environment according to the outputs
+            st.write(current_node["short_task_header"])
+            st.write("Query")
+            st.markdown(model_task)
             
-        llm_result = invoker.invoke_backend(endpoint, model_task, {
-                "extra_stopwords":extra_stopwords
-            } )
-        
-        ## update taskRuntimeEnvironment
-        outputs = current_node["outputs"]
-        for connector in outputs:
-            if connector["source"] == "local.model_task":
-                value = model_task
-            elif connector["source"] == "result.llm.response.content":
-                value = llm_result['llm.response.content']
-            else:
-                value = None
+            # now execute the model task for a given endpoint and retrieve the answer
                 
-            execution_environment[connector["target"]] = value
+            llm_result = invoker.invoke_backend(endpoint, model_task, {
+                    "extra_stopwords":extra_stopwords
+                } )
             
-        st.write("Answer")
-        st.code(llm_result['llm.response.content'])
+            ## update taskRuntimeEnvironment
+            outputs = current_node["outputs"]
+            for connector in outputs:
+                if connector["source"] == "local.model_task":
+                    value = model_task
+                elif connector["source"] == "result.llm.response.content":
+                    value = llm_result['llm.response.content']
+                else:
+                    value = None
+                    
+                execution_environment[connector["target"]] = value
+                
+            st.write("Answer")
+            st.code(llm_result['llm.response.content'])
+        elif current_node_type is "ReadUploadFile":
+            ## read, which elements?
+             
+            ## convert the uploaded file into filename and the file content
+            ## we need this to intoduce loops / multiple upload processing.
+            pass
+        else:
+            pass
         
         # go to next node
         if current_node_name in edgedata["connections"]:
@@ -470,22 +499,7 @@ def render_ai_task_graph_tab(tab):
     with tab:
         workflow_file = "../../../../../../ai_tasks/StableDiffusionTiPersonDataPruning2.json"
         
-        execute_instructions = {}
-        task_nodes = []
-        execution_environment = {}
-        
-        with open(workflow_file ,'r', encoding='utf-8') as json_file:
-            ai_task_descriptor = json.load(json_file)
-            
-            execute_instructions = ai_task_descriptor["execute"]
-            task_nodes = ai_task_descriptor["nodedata"]['nodes']
-            metadata = ai_task_descriptor["__metadata"]
-            edgedata = ai_task_descriptor["edgedata"]
-            jsondata_dictionary = ai_task_descriptor["json_data_dictionary"]
-        
-        for json_key in jsondata_dictionary.keys():
-            structure = jsondata_dictionary[json_key]
-            execution_environment[json_key] = structure
+        metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor = prepareWorkflow(workflow_file)
     
         # Render the short task description
         st.write(metadata["short_description"])
@@ -501,6 +515,8 @@ def render_ai_task_graph_tab(tab):
                 execution_environment[input_key] = st.selectbox(input_fields[input_key]["label"], input_fields[input_key]["options"], key = key)
             elif input_fields[input_key]["__uitype"]=="singlefileupload":
                 inputfile = st.file_uploader(input_fields[input_key]["label"], accept_multiple_files=False,key=input_key)
+                
+                # TODO: remove the processing of the file content and move it to somewhere else
                 if inputfile is not None:
                     # TODO depending on the satatype we should convert the input.
                     execution_environment[input_key] = inputfile.getvalue().decode("utf-8")
@@ -522,23 +538,7 @@ def render_translator_test_tab(tab):
     with tab:
         workflow_file = "../../../../../../ai_tasks/EnglishToJapaneseTranslator.json"
         
-        execute_instructions = {}
-        task_nodes = []
-        execution_environment = {}
-        
-        with open(workflow_file,'r', encoding='utf-8') as json_file:
-            ai_task_description = json.load(json_file)
-            
-            execute_instructions = ai_task_description["execute"]
-            task_nodes = ai_task_description["nodedata"]['nodes']
-            metadata = ai_task_description["__metadata"]
-            edgedata = ai_task_description["edgedata"]
-            jsondata_dictionary = ai_task_description["json_data_dictionary"]
-            pass
-        
-        for json_key in jsondata_dictionary.keys():
-            structure = jsondata_dictionary[json_key]
-            execution_environment[json_key] = structure
+        metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor = prepareWorkflow(workflow_file)
         
         # Render the short task description
         st.write(metadata["short_description"])
@@ -556,7 +556,7 @@ def render_translator_test_tab(tab):
         if(runme):
             executeWorkflow(execution_environment, execute_instructions, task_nodes, edgedata)
     
-        st.write(ai_task_description)
+        st.write(ai_task_descriptor)
         
         pass
         
