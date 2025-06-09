@@ -382,6 +382,10 @@ def buildModelTaskFromJson(current_node_name, task_nodes, model_template, taskRu
     if current_node is None:
         return "",[]
     
+    if current_node["type"] != "AITaskTemplate":
+        return "",[],current_node
+        
+    
     system_prompt = current_node["system_prompt"]
     query = current_node["task_query"]
     context_template = current_node["task_context_template"]
@@ -444,13 +448,16 @@ def executeWorkflow(execution_environment, execute_instructions, task_nodes, edg
     while current_node_name is not None:
         model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, task_nodes,  model_template, execution_environment)
         
-        current_node_type = current_node["type"] 
-        if current_node_type is "AITaskTemplate":
+        
+        
+        current_node_type = current_node["type"]
+        st.write("current Node Type : "+current_node_type ) 
+        if current_node_type == "AITaskTemplate":
             # execute this
             # update the environment according to the outputs
             st.write(current_node["short_task_header"])
             st.write("Query")
-            st.markdown(model_task)
+            st.code(model_task,language="markdown")
             
             # now execute the model task for a given endpoint and retrieve the answer
                 
@@ -472,14 +479,52 @@ def executeWorkflow(execution_environment, execute_instructions, task_nodes, edg
                 
             st.write("Answer")
             st.code(llm_result['llm.response.content'])
-        elif current_node_type is "ReadUploadFile":
-            ## read, which elements?
-             
-            ## convert the uploaded file into filename and the file content
-            ## we need this to intoduce loops / multiple upload processing.
+        elif current_node_type == "ReadUploadedFile":
+            inputfile = None
+            
+            inputs = current_node["inputs"]
+            for inputconnector in inputs:
+                if inputconnector["target"] == "file":
+                    inputfile = execution_environment[inputconnector["source"]]
+                    break 
+
+            if inputfile is not None:
+                outputs = current_node["outputs"]
+                for connector in outputs:
+                    value = None
+                    if connector["source"] == "file.name":
+                        value = inputfile.name
+                    elif connector["source"] == "file.content.utf8":
+                        value = inputfile.getvalue().decode("utf-8")
+                    elif connector["source"] == "file.content.bytes":
+                        value = inputfile.getValue()
+                    else:
+                        value = None
+                        
+                    execution_environment[connector["target"]] = value
+        elif current_node_type == "RenderTemplate":
+            template = ""
+            inputs = current_node["inputs"]
+            for inputconnector in inputs:
+                if inputconnector["target"] == "template":
+                    template = execution_environment[inputconnector["source"]]
+                    break 
+            
+            template_engine = AIPETKTemplateEngine(None)
+            rendered = template_engine.evaluateTemplate(template, execution_environment)
+                        
+            outputs = current_node["outputs"]
+            for connector in outputs:
+                value = None
+                if connector["source"] == "rendered":
+                    execution_environment[connector["target"]] = rendered
+            
             pass
         else:
             pass
+        
+        st.write("updated environment")
+        st.code(execution_environment, language="json")
         
         # go to next node
         if current_node_name in edgedata["connections"]:
@@ -490,7 +535,7 @@ def executeWorkflow(execution_environment, execute_instructions, task_nodes, edg
     # Now do process the output nodes
     
     st.write("Final Value for the execution environment:")
-    st.code(execution_environment,language="json")        
+    st.write(execution_environment,language="json")        
     
     pass
 
@@ -515,22 +560,14 @@ def render_ai_task_graph_tab(tab):
                 execution_environment[input_key] = st.selectbox(input_fields[input_key]["label"], input_fields[input_key]["options"], key = key)
             elif input_fields[input_key]["__uitype"]=="singlefileupload":
                 inputfile = st.file_uploader(input_fields[input_key]["label"], accept_multiple_files=False,key=input_key)
-                
-                # TODO: remove the processing of the file content and move it to somewhere else
-                if inputfile is not None:
-                    # TODO depending on the satatype we should convert the input.
-                    execution_environment[input_key] = inputfile.getvalue().decode("utf-8")
-                    execution_environment[input_key+".filename"] = inputfile.name
-                    
-                else:
-                    execution_environment[input_key] = "empty"
+                execution_environment[input_key] = inputfile
     
         # render the execute button    
         runme = st.button("Execute",key=metadata["name"]+".execute")
         if(runme):
             executeWorkflow(execution_environment, execute_instructions, task_nodes, edgedata)
     
-        st.write(ai_task_descriptor)
+        #st.write(ai_task_descriptor)
         pass
     pass
     
@@ -556,7 +593,7 @@ def render_translator_test_tab(tab):
         if(runme):
             executeWorkflow(execution_environment, execute_instructions, task_nodes, edgedata)
     
-        st.write(ai_task_descriptor)
+        #st.write(ai_task_descriptor)
         
         pass
         
