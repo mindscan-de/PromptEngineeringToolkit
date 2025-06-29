@@ -270,6 +270,31 @@ def render_workflow_tab(tab):
         
         with workflow_selection_column:
             selected_workflow = st.selectbox("Choose the workflow to inspect", workflows)
+            
+        if selected_workflow is None:
+            return
+        
+        # TODO: load the workflow and 
+        workflow_file = os.path.join(ai_task_directory, selected_workflow)
+        metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor = prepareWorkflow(workflow_file)
+        
+        task_names = [task['taskname'] for task in task_nodes]
+        
+        with workflow_content_column:
+            task_tabs = st.tabs(task_names)
+            for current_task_tab, current_task_node in zip(task_tabs,task_nodes):
+                with current_task_tab:
+                    input_column, output_column = st.columns(2)
+                    with input_column:
+                        st.write("Input")
+                    with output_column:
+                        st.write("Output")
+                    
+                    # ------
+                    # task infos
+                    pass
+            
+        
         pass
     
     
