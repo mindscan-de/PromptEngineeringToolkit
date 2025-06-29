@@ -284,13 +284,18 @@ def render_workflow_tab(tab):
             task_tabs = st.tabs(task_names)
             for current_task_tab, current_task_node in zip(task_tabs,task_nodes):
                 with current_task_tab:
+                    st.write(current_task_node['short_task_header'])
                     input_column, output_column = st.columns(2)
                     with input_column:
-                        st.write("Input")
+                        st.write("**In**")
+                        for input in current_task_node['inputs']:
+                            st.markdown( "***"+input['source']+"*** [ "+input['__datatype']+" ] ==> ***" + input['target'] + "***")
+                        
                     with output_column:
-                        st.write("Output")
+                        st.write("**Out**")
+                        for output in current_task_node['outputs']:
+                            st.markdown( "***"+output['source']+"*** [ "+output['__datatype']+" ] ==> ***" + output['target'] + "***")
                     
-                    # ------
                     # task infos
                     pass
             
