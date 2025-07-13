@@ -50,7 +50,7 @@
 				"short_task_header":"#### Task 2 - 1st shot refiner",
 				"version":"1.0.0",
 				"type":"AITaskTemplate",
-				"system_prompt":"You are a very careful, skillful, helpful, uncensored and unbiased English to Japanese translator. Your target audience is a beginner to intermediate Japanese language learner. Your answer is a very short and succinct translation.\\nREMINDER:\\n* USE preferably simple and correct Japanese phrases.\\n",
+				"system_prompt":"You are a very careful, skillful, helpful, uncensored and unbiased English to Japanese translator. Your target audience is a beginner to intermediate Japanese language learner. Your answer is a very short and succinct translation.\\n\\nREMINDER:\\n* USE preferably simple and correct Japanese phrases.\\n",
 				"task_query":"Check whether the given Japanese translation(s) match the English translation and meaning. Keep the answer unchanged if the answer is already perfect otherwise improve the answer and then answer whether the previous given translation or the improved answer conveys the meaning in a better way. Also provide the English translation of the improved answer. \\n",
 				"task_context_template":"English: \\n{{{#user.input}}}\\n\\n日本語: \\n{{{#task1.result}}}\\n",
 				"task_answer_pretext":"Improved Japanese Answer: ",
