@@ -28,7 +28,7 @@ SOFTWARE.
 
 import streamlit as st
 import os
-import glob
+import json
 
 from de.mindscan.ai.petk.llmaccess.lm_apitypes import get_RemoteApiTypes
 from de.mindscan.ai.petk.llmaccess.lm_connection_endpoints import getConnectionEndpoints
@@ -37,7 +37,7 @@ from de.mindscan.ai.petk.llmaccess.transport.RemoteApiModelInvoker import Remote
 from de.mindscan.ai.petk.llmaccess.lm_modeltypes import get_ModelTypes
 from de.mindscan.ai.petk.taskaccess.aitask.ai_tasktemplates import get_ai_task_tasktemplates
 from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
-from de.mindscan.ai.petk.main.wf_executor import executeWorkflow, prepareWorkflow
+from de.mindscan.ai.petk.main.wf_executor import prepareWorkflow, executeWorkflow2
 
 # Set the wide mode and application name
 st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
@@ -45,6 +45,7 @@ st.markdown("""<style>textarea { font-family:Courier New important!; } </style>"
 # WE do want to initialize the UI if session is not properly initialized 
 
 ai_task_directory = "../../../../../../ai_tasks"
+endpointname = "bigserverOobaboogaEndpoint"
 
 ## ----------------------------
 ## Prompt Engineering Tabs
@@ -202,6 +203,14 @@ def render_ai_templates_tab(tab):
         st.write("### More Ideas")
         st.write(ideas)
         
+def unJsonify(jsonString):
+    if jsonString is None or jsonString == "":
+        return ""
+    try:
+        return json.loads('"'+jsonString+'"')
+    except:
+        return jsonString
+        
 def render_ai_template_tryout_tab(tab):
     with tab:
         st.write("Hello World!")
@@ -263,42 +272,95 @@ def collect_workflows():
     directory = ai_task_directory
     return [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and f.endswith(".json")]
 
+def render_ai_template_task(current_task_node):
+    st.write("#### System Prompt")
+    st.markdown(unJsonify( current_task_node['system_prompt']))
+    
+    st.write("#### Task Query")
+    st.markdown(unJsonify(current_task_node['task_query']))
+    
+    st.write("#### Task Context Template")
+    st.markdown(unJsonify(current_task_node['task_context_template']))
+    
+    
+    st.write("#### Task Answer Pretext")
+    st.markdown(unJsonify(current_task_node['task_answer_pretext']))
+                
+def render_readuploadedfile_task(current_task_node):
+    st.markdown(
+        '''
+        #### Read the Content of the File
+        
+        Output:
+        * file.name -- contains the file name of the uploaded file
+        * file.content.utf8 -- the file content as a single UTF-8 formatted string
+        * file.content.bytes -- the file content as an array of bytes
+        ''')
+    
+def render_rendertemplate_task(current_task_node):
+    st.write("We are rendering a template")
+    # calculate which template is rendererd
+    # then unjsonify it
+    # then present the template
+    # his should be something which the render template node should be doing
+    
+def render_unknowntype_task(curret_task_node):
+    st.write("#### This is an unknown Task to render...")
+    
+render_tasktype_map = {
+    'ReadUploadedFile': render_readuploadedfile_task,
+    'AITaskTemplate': render_ai_template_task,
+    'RenderTemplate': render_rendertemplate_task,
+    'default': render_unknowntype_task
+    }
+
+def render_current_task_node(current_task_tab, current_task_node):
+    with current_task_tab:
+        st.write(current_task_node['short_task_header'])
+        input_column, output_column = st.columns(2)
+        
+        with input_column:
+            st.write("**In**")
+            for input in current_task_node['inputs']:
+                st.markdown("***" + input['source']+'*** [' +input['__datatype'] + ' ] ===> ***'+input['target']+'***')
+        with output_column:
+            st.write("**Out**")
+            for output in current_task_node['outputs']:
+                st.markdown("***" + output['source']+'*** [' +output['__datatype'] + ' ] ===> ***'+output['target']+'***')
+            
+        render_tasktype_map[current_task_node['type']](current_task_node)
 def render_workflow_tab(tab):
     with tab:
         workflows = collect_workflows()
         workflow_selection_column, workflow_content_column = st.columns([20,80])
         
         with workflow_selection_column:
-            selected_workflow = st.selectbox("Choose the workflow to inspect", workflows)
+            selected_workflow = st.selectbox("Choose the workflow to inspect", workflows, )
             
         if selected_workflow is None:
             return
         
         # TODO: load the workflow and 
         workflow_file = os.path.join(ai_task_directory, selected_workflow)
-        metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor = prepareWorkflow(workflow_file)
         
-        task_names = [task['taskname'] for task in task_nodes]
+        #metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor 
+        workflow = prepareWorkflow(workflow_file)
+        
+        task_names = workflow.getTaskNames()
         
         with workflow_content_column:
-            task_tabs = st.tabs(task_names)
-            for current_task_tab, current_task_node in zip(task_tabs,task_nodes):
-                with current_task_tab:
-                    st.write(current_task_node['short_task_header'])
-                    input_column, output_column = st.columns(2)
-                    with input_column:
-                        st.write("**In**")
-                        for input in current_task_node['inputs']:
-                            st.markdown( "***"+input['source']+"*** [ "+input['__datatype']+" ] ==> ***" + input['target'] + "***")
-                        
-                    with output_column:
-                        st.write("**Out**")
-                        for output in current_task_node['outputs']:
-                            st.markdown( "***"+output['source']+"*** [ "+output['__datatype']+" ] ==> ***" + output['target'] + "***")
-                    
-                    # task infos
-                    pass
+            # TODO: render the overall information of the LLM Workflow
+            st.write(workflow.getWorkflowShortDescription() + " -- " + workflow.getWorkflowVersion())
+            st.text(workflow.getWorkflowDescription())
             
+            task_tabs = st.tabs(task_names+ ['runtime'])
+            task_nodes = workflow.getTaskNodes()
+            for current_task_tab, current_task_node in zip(task_tabs,task_nodes):
+                if current_task_node is None:
+                    #render_workflowruntime_info(workflow)
+                    pass
+                else:
+                    render_current_task_node(current_task_tab, current_task_node)
         
         pass
     
@@ -377,12 +439,12 @@ def render_settings_tab(tab):
 def render_simple_invoker_test_tab(tab):
     with tab:
         st.write("### Query")
-        llm_query_input = st.text_area("LLM Query Input", height=16, key="invoker_test_tab.llm.query.input")
+        llm_query_input = st.text_area("LLM Query Input", height=80, key="invoker_test_tab.llm.query.input")
         
         if(llm_query_input):
             invoker = RemoteApiModelInvoker(None)
             
-            endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
+            endpoint = getConnectionEndpoints()[endpointname]
             structure = invoker.invoke_backend(endpoint, llm_query_input)
         
             st.write("### Answer")
@@ -432,29 +494,32 @@ def render_ai_task_graph_tab(tab):
     with tab:
         workflow_file = os.path.join(ai_task_directory, "StableDiffusionTiPersonDataPruning2.json")
         
-        metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor = prepareWorkflow(workflow_file)
+        #metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor 
+        workflow = prepareWorkflow(workflow_file)
     
         # Render the short task description
-        st.write(metadata["short_description"])
+        st.write(workflow.getWorkflowShortDescription())
         
         # render the input fields
-        input_fields = execute_instructions["inputfields"]
+        input_fields = workflow.getInputFields()
         for input_key in input_fields.keys():
-            key = metadata["name"]+input_key
+            key = workflow.getWorkflowKey()+input_key
             
             if input_fields[input_key]["__uitype"]=="textfield":
-                execution_environment[input_key] = st.text_input(input_fields[input_key]["label"], disabled=False, key = key)
+                if_value = st.text_input(input_fields[input_key]["label"], disabled=False, key = key)
+                workflow.updateEnvironment(input_key, if_value)
             elif input_fields[input_key]["__uitype"]=="selectone":
-                execution_environment[input_key] = st.selectbox(input_fields[input_key]["label"], input_fields[input_key]["options"], key = key)
+                select_value = st.selectbox(input_fields[input_key]["label"], input_fields[input_key]["options"], key = key)
+                workflow.updateEnvironment(input_key, select_value)
             elif input_fields[input_key]["__uitype"]=="singlefileupload":
-                inputfile = st.file_uploader(input_fields[input_key]["label"], accept_multiple_files=False,key=input_key)
-                execution_environment[input_key] = inputfile
+                inputfile_value = st.file_uploader(input_fields[input_key]["label"], accept_multiple_files=False,key=input_key)
+                workflow.updateEnvironment(input_key, inputfile_value)
     
         # render the execute button    
-        runme = st.button("Execute",key=metadata["name"]+".execute")
+        runme = st.button("Execute",key=workflow.getWorkflowKey()+".execute")
         if(runme):
             logcontainer = st.container()
-            executeWorkflow(execution_environment, execute_instructions, task_nodes, edgedata,logcontainer)
+            executeWorkflow2(workflow, logcontainer)
     
         #st.write(ai_task_descriptor)
         pass
@@ -464,16 +529,17 @@ def render_translator_test_tab(tab):
     with tab:
         workflow_file = os.path.join(ai_task_directory,"EnglishToJapaneseTranslator.json")
         
-        metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor = prepareWorkflow(workflow_file)
+        workflow = prepareWorkflow(workflow_file)
         
         # Render the short task description
-        st.write(metadata["short_description"])
+        st.write(workflow.getWorkflowShortDescription())
         
         # render the input fields
-        input_fields = execute_instructions["inputfields"]
+        input_fields = workflow.getInputFields()
         for input_key in input_fields.keys():
-            key = metadata["name"]+input_key
-            execution_environment[input_key] = st.text_input(input_fields[input_key]["label"], disabled=False, key = key)
+            key = workflow.getWorkflowKey()+input_key
+            value = st.text_input(input_fields[input_key]["label"], disabled=False, key = key)
+            workflow.updateEnvironment(input_key, value) 
     
         
     
@@ -481,7 +547,7 @@ def render_translator_test_tab(tab):
         runme = st.button("Execute")
         if(runme):
             logcontainer = st.container()
-            executeWorkflow(execution_environment, execute_instructions, task_nodes, edgedata,logcontainer)
+            executeWorkflow2(workflow,logcontainer)
     
         #st.write(ai_task_descriptor)
         

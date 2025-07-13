@@ -33,7 +33,9 @@ from de.mindscan.ai.petk.llmaccess.lm_connection_endpoints import getConnectionE
 import json
 from de.mindscan.ai.petk.llmaccess.translate.modeltypes.PhindCodeLama34Bv2 import PhindCodeLama34Bv2
 from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
+from de.mindscan.ai.petk.main.Workflow import AIWorkflow
 
+# TODO: refactor this to workflow, such that the workflow has its own deserializing mechanism
 def prepareWorkflow(workflow_file):
     execute_instructions = {}
     task_nodes = []
@@ -49,7 +51,9 @@ def prepareWorkflow(workflow_file):
         structure = jsondata_dictionary[json_key]
         execution_environment[json_key] = structure
     
-    return metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor
+    return AIWorkflow(metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor)
+
+
 
 
 def buildModelTaskFromJson(current_node_name, task_nodes, model_template, taskRuntimeEnvironment):
@@ -199,3 +203,7 @@ def executeWorkflow(execution_environment, execute_instructions, task_nodes, edg
         st.write(execution_environment,language="json")        
         
         pass
+
+def executeWorkflow2(workflow, logcontainer):
+    executeWorkflow(workflow.getExecutionEnvironment(), workflow.getExecutionInstructions(), workflow.getTaskNodes(), workflow.getEdgeData() ,logcontainer)
+    pass
