@@ -30,29 +30,13 @@ import streamlit as st
 from de.mindscan.ai.petk.llmaccess.transport.RemoteApiModelInvoker import RemoteApiModelInvoker
 from de.mindscan.ai.petk.llmaccess.lm_connection_endpoints import getConnectionEndpoints
 
-import json
 from de.mindscan.ai.petk.llmaccess.translate.modeltypes.PhindCodeLama34Bv2 import PhindCodeLama34Bv2
 from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
-from de.mindscan.ai.petk.main.Workflow import AIWorkflow
+from de.mindscan.ai.petk.main.Workflow import workflowFromJsonFile
 
-# TODO: refactor this to workflow, such that the workflow has its own deserializing mechanism
+
 def prepareWorkflow(workflow_file):
-    execute_instructions = {}
-    task_nodes = []
-    execution_environment = {}
-    with open(workflow_file, 'r', encoding='utf-8') as json_file:
-        ai_task_descriptor = json.load(json_file)
-        execute_instructions = ai_task_descriptor["execute"]
-        task_nodes = ai_task_descriptor["nodedata"]['nodes']
-        metadata = ai_task_descriptor["__metadata"]
-        edgedata = ai_task_descriptor["edgedata"]
-        jsondata_dictionary = ai_task_descriptor["json_data_dictionary"]
-    for json_key in jsondata_dictionary.keys():
-        structure = jsondata_dictionary[json_key]
-        execution_environment[json_key] = structure
-    
-    return AIWorkflow(metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor)
-
+    return workflowFromJsonFile(workflow_file)
 
 
 
