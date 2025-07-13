@@ -1,0 +1,173 @@
+{
+	"__metadata":{
+		"name":"SDTextualInversionPersonAndRealityPruning",
+		"short_description":"### SD-TextualInversion Cleanup",
+		"version":"1.0.0",
+		"__description":"This is a helper to cleanup Danbooru tags to improve the tags to create improved Textual Inversions" 
+	},
+	
+	"execute": {
+		"entry":"processFileContent",
+		"inputfields":{
+			"input.danbooru.file":{
+				"__uitype":"singlefileupload",
+				"__datatype":"upload",
+				"label":"Upload generated Danbooru tagfile"
+			},
+			"character.labels.toprune":{
+				"__uitype":"textfield",
+				"__datatype":"string",
+				"label":"Tags describing the character"
+			},
+			"target.realism":{
+				"__uitype":"selectone",
+				"__datatype":"string",
+				"label":"Target Realism",
+				"options":["anime","real"]
+			}
+		},
+		"returns":{
+			"input.danbooru.labels":{
+				"__datatype":"string"
+			},
+			"cleaned.labels":{
+				"__datatype":"string"
+			}
+		}
+	},
+	
+	"nodedata": {
+		"nodes":[
+			{
+				"taskname":"processFileContent",
+				"short_task_header":"#### Task 0 - read upload file content",
+				"version":"1.0.0",
+				"type":"ReadUploadedFile",
+				"inputs":[
+					{
+						"target":"file",
+						"source":"input.danbooru.file",
+						"__datatype":"upload"
+					}
+				],
+				"outputs":[
+					{
+						"target":"input.danbooru.filename",
+						"source":"file.name",
+						"__datatype":"string"
+					},
+					{
+						"target":"input.danbooru.labels",
+						"source":"file.content.utf8",
+						"__datatype":"string"
+					}
+				]
+			},
+			{
+				"taskname":"cleanupCharacterLabels",
+				"short_task_header":"#### Task 1 - Remove character tags - TI will learn these",
+				"version":"1.0.0",
+				"type":"AITaskTemplate",
+				"system_prompt":"You are a helpful assistant for processing generated labels for images. Your job is to process the labels according to these Rules\\n",
+				"task_query":"Just process the labels, don't generate code.",
+				"task_context_template":"### Rules \\n\\n* KEEP LABELS describing the scene\\n* KEEP LABELS related to scene composition, e.g. close-up, full body, portrait, looking at viewer, depth of field, solo, shiny [...] \\n* KEEP LABELS related to clothing, e.g. colored panties, underwear, bikini, eyewear, sportswear, swimwear, swimsuit, hats, [...] etc... \\n* KEEP EVERY LABEL, which doesn't fit the category to be removed.\\n* REMOVE LABEL '1girl', from the list of labels and\\n* REMOVE LABELS describing the appearance of a person, e.g. fingernails, hair color, length of hair,  hair length, breasts, breast size, eye color, nose, lips, navel, teeth, [...] and such  \\n\\n\\n### Reminder\\n\\n* DON'T remove labels which aren't meant to be removed according to the Rules.\\n* DON'T answer with code.\\n* DON'T comment, just answer with a list.\\n\\nList of generated Labels: {{{#input.danbooru.labels}}}, \\n",
+				"task_answer_pretext":"List of remaining Labels (comma separated): ",
+				"extra_stopwords":["\\n\\n"],
+				"inputs":[],
+				"outputs":[
+					{
+						"target":"remaining.scene.general.labels",
+						"source":"result.llm.response.content",
+						"__datatype":"string"
+					}
+				]
+			},
+			{
+				"taskname":"cleanupPhotographicRealismLabels",
+				"short_task_header":"#### Task 2 - Remove photographic and realistic tags - TI will learn these",
+				"version":"1.0.0",
+				"type":"AITaskTemplate",
+				"system_prompt":"You are a helpful assistant for processing generated labels for images. Your job is to process the labels according to these Rules\\n",
+				"task_query":"Just process the labels, don't generate code.",
+				"task_context_template":"### Rules:\\n\\n* keep labels describing the scene and\\n* keep labels related to low quality properties, e.g. blurry, ...\\n* keep labels related to the scene composition, e.g. looking at viewer, depth of field, ... \\n* keep every label related to clothing, e.g.  colored panties, underwear, sportswear, hats, eyewear ... and such \\n* keep every label, which doesn't fit the category to be removed.\\n* remove labels related to only high quality photographic properties, photorealism, reality and realism, e.g. 3d, photo, realistic, detailled, ...\\n\\n\\n### Reminder\\n\\n* DON'T remove labels which aren't meant to be removed according to the Rules.\\n* DON'T answer with code.\\n* DON'T comment, just answer with a list.\\n\\nList of generated Labels: {{{#remaining.scene.general.labels}}}, \\n",
+				"task_answer_pretext":"List of remaining Labels (comma separated): ",
+				"extra_stopwords":["\\n\\n"],
+				"inputs":[],
+				"outputs":[
+					{
+						"target":"cleaned.labels",
+						"source":"result.llm.response.content",
+						"__datatype":"string"
+					}
+				]
+			},
+			{
+				"taskname":"calculateDifference",
+				"short_task_header":"#### Task 3 - Calculate the difference for reference",
+				"version":"1.0.0",
+				"type":"AITaskTemplate",
+				"system_prompt":"You are a helpful assistant for processing generated labels for images. Your job is to either process, keep or remove the labels according to these Rules\\n",
+				"task_query":"Calculate the removed Labels. Just process the labels, don't generate code.",
+				"task_context_template":"List of unprocessed labels: {{{#input.danbooru.labels}}}\\n\\nList of remaining labels: {{{#cleaned.labels}}}, \\n",
+				"task_answer_pretext":"List of removed Labels  (comma separated): ",
+				"extra_stopwords":["\\n\\n"],
+				"inputs":[],
+				"outputs":[
+					{
+						"target":"removed.labels",
+						"source":"result.llm.response.content",
+						"__datatype":"string"
+					}
+				]
+			},
+			{
+				"taskname":"renderOutputfileContent",
+				"short_task_header":"#### Task 4 - render the output file content",
+				"version":"1.0.0",
+				"type":"RenderTemplate",
+				"inputs":[
+					{
+						"target":"template",
+						"source":"outputTemplate",
+						"__datatype":"string"
+					}
+				],
+				"outputs":[
+					{
+						"target":"output.file.content",
+						"source":"rendered",
+						"__datatype":"string"
+					}
+				]
+			}
+		],
+		"__comment":[
+			"# remove all tags related to the character",
+			"# if target is anime - remove anime related tags, -- anime, illustration, 2d",
+			"# if target is realistic - remove any realistic related tags, -- 3d, photo, realistic, ....",
+			"# remove those tags, which SD-1.5-emea-pruned doesn't understand - cowboy shot"
+		]
+	},
+	
+	"edgedata": {
+		"connections": {
+			"processFileContent":{
+				"next":["cleanupCharacterLabels"]
+			},
+			"cleanupCharacterLabels": {
+				"next":["cleanupPhotographicRealismLabels"]
+			},
+			"cleanupPhotographicRealismLabels": {
+				"next":["calculateDifference"]
+			},
+			"calculateDifference": {
+				"next":["renderOutputfileContent"]
+			}
+		}
+	},
+	
+	"json_data_dictionary": {
+		"outputTemplate":"{{{#trim:cleaned.labels}}}\\n\\nremoved labels:\\n{{{#trim:removed.labels}}}"
+	}
+
+}
