@@ -56,6 +56,9 @@ class AIWorkflow(object):
     def getEdgeData(self):
         return self.__edgedata
     
+AI_TASK_DESCRIPTOR_KEY_EXECUTE_INSTRUCTIONS = "execute"
+AI_TASK_DESCRIPTOR_KEY_NODEDATA = "nodedata"
+AI_TASK_DESCRIPTOR_KEY_METADATA = "__metadata"
     
 def workflowFromJsonFile(workflow_file):
     execute_instructions = {}
@@ -63,11 +66,13 @@ def workflowFromJsonFile(workflow_file):
     execution_environment = {}
     with open(workflow_file, 'r', encoding='utf-8') as json_file:
         ai_task_descriptor = json.load(json_file)
-        execute_instructions = ai_task_descriptor["execute"]
-        task_nodes = ai_task_descriptor["nodedata"]['nodes']
-        metadata = ai_task_descriptor["__metadata"]
+        execute_instructions = ai_task_descriptor[AI_TASK_DESCRIPTOR_KEY_EXECUTE_INSTRUCTIONS]
+        task_nodes = ai_task_descriptor[AI_TASK_DESCRIPTOR_KEY_NODEDATA]['nodes']
+        metadata = ai_task_descriptor[AI_TASK_DESCRIPTOR_KEY_METADATA]
         edgedata = ai_task_descriptor["edgedata"]
         jsondata_dictionary = ai_task_descriptor["json_data_dictionary"]
+    # basicalls this should be part of a process not part of the workflow, the workflow is basically the template of the process, 
+    # the runtime.environment data should be part of an AI process
     for json_key in jsondata_dictionary.keys():
         structure = jsondata_dictionary[json_key]
         execution_environment[json_key] = structure
