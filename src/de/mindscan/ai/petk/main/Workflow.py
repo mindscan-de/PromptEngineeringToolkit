@@ -6,11 +6,17 @@ Created on 13.07.2025
 
 import json
 
+AI_TASK_DESCRIPTOR_KEY_EXECUTE_INSTRUCTIONS = "execute"
+AI_TASK_DESCRIPTOR_KEY_NODEDATA = "nodedata"
+AI_TASK_DESCRIPTOR_KEY_METADATA = "__metadata"
+AI_TASK_DESCRIPTOR_KEY_EDGEDATA = "edgedata"
+AI_TASK_DESCRIPTOR_KEY_DATADICTIONARY = "json_data_dictionary"
+
+
 class AIWorkflow(object):
     '''
     classdocs
     '''
-
 
     def __init__(self,  metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor):
         '''
@@ -56,9 +62,14 @@ class AIWorkflow(object):
     def getEdgeData(self):
         return self.__edgedata
     
-AI_TASK_DESCRIPTOR_KEY_EXECUTE_INSTRUCTIONS = "execute"
-AI_TASK_DESCRIPTOR_KEY_NODEDATA = "nodedata"
-AI_TASK_DESCRIPTOR_KEY_METADATA = "__metadata"
+    def getEntryNodeName(self):
+        return self.getExecutionInstructions()['entry']
+    
+    def getNextNodeName(self, current_node_name):
+        if current_node_name in self.__edgedata["connections"]:
+            return self.__edgedata["connections"][current_node_name]["next"][0] or None
+        return None
+
     
 def workflowFromJsonFile(workflow_file):
     execute_instructions = {}
@@ -69,8 +80,8 @@ def workflowFromJsonFile(workflow_file):
         execute_instructions = ai_task_descriptor[AI_TASK_DESCRIPTOR_KEY_EXECUTE_INSTRUCTIONS]
         task_nodes = ai_task_descriptor[AI_TASK_DESCRIPTOR_KEY_NODEDATA]['nodes']
         metadata = ai_task_descriptor[AI_TASK_DESCRIPTOR_KEY_METADATA]
-        edgedata = ai_task_descriptor["edgedata"]
-        jsondata_dictionary = ai_task_descriptor["json_data_dictionary"]
+        edgedata = ai_task_descriptor[AI_TASK_DESCRIPTOR_KEY_EDGEDATA]
+        jsondata_dictionary = ai_task_descriptor[AI_TASK_DESCRIPTOR_KEY_DATADICTIONARY]
     # basicalls this should be part of a process not part of the workflow, the workflow is basically the template of the process, 
     # the runtime.environment data should be part of an AI process
     for json_key in jsondata_dictionary.keys():
@@ -78,3 +89,4 @@ def workflowFromJsonFile(workflow_file):
         execution_environment[json_key] = structure
     
     return AIWorkflow(metadata, execute_instructions, execution_environment, task_nodes, edgedata, ai_task_descriptor)
+

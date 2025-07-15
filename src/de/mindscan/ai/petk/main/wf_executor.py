@@ -40,7 +40,9 @@ def prepareWorkflow(workflow_file):
 
 
 
-def buildModelTaskFromJson(current_node_name, task_nodes, model_template, taskRuntimeEnvironment):
+def buildModelTaskFromJson(current_node_name, workflow, model_template, taskRuntimeEnvironment):
+    task_nodes = workflow.getTaskNodes()
+    
     current_node = None
     for task_node in task_nodes:
         if task_node["taskname"] == current_node_name:
@@ -76,7 +78,10 @@ def buildModelTaskFromJson(current_node_name, task_nodes, model_template, taskRu
 
 
 # Basic workflow execution extraction
-def executeWorkflow(execution_environment, execute_instructions, task_nodes, edgedata, log_container):
+def executeWorkflow(workflow, log_container):
+    # TODO: 
+    execution_environment = workflow.getExecutionEnvironment()
+    
     with log_container:
         st.write("### Workflow Log Container")
         st.write("should have run it")
@@ -92,10 +97,10 @@ def executeWorkflow(execution_environment, execute_instructions, task_nodes, edg
         model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
         
         ## TODO iterate, while the state exists, of the current name is not None
-        current_node_name = execute_instructions["entry"]
+        current_node_name = workflow.getEntryNodeName()
         
         while current_node_name is not None:
-            model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, task_nodes,  model_template, execution_environment)
+            model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, workflow,  model_template, execution_environment)
             
             
             
@@ -175,11 +180,7 @@ def executeWorkflow(execution_environment, execute_instructions, task_nodes, edg
             st.write("updated environment")
             st.code(execution_environment, language="json")
             
-            # go to next node
-            if current_node_name in edgedata["connections"]:
-                current_node_name = edgedata["connections"][current_node_name]["next"][0] or None
-            else:            
-                current_node_name = None
+            current_node_name = workflow.getNextNodeName(current_node_name)
         
         # Now do process the output nodes
         
@@ -188,6 +189,3 @@ def executeWorkflow(execution_environment, execute_instructions, task_nodes, edg
         
         pass
 
-def executeWorkflow2(workflow, logcontainer):
-    executeWorkflow(workflow.getExecutionEnvironment(), workflow.getExecutionInstructions(), workflow.getTaskNodes(), workflow.getEdgeData() ,logcontainer)
-    pass
