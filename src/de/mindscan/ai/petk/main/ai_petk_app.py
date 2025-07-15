@@ -37,7 +37,7 @@ from de.mindscan.ai.petk.llmaccess.transport.RemoteApiModelInvoker import Remote
 from de.mindscan.ai.petk.llmaccess.lm_modeltypes import get_ModelTypes
 from de.mindscan.ai.petk.taskaccess.aitask.ai_tasktemplates import get_ai_task_tasktemplates
 from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
-from de.mindscan.ai.petk.main.wf_executor import prepareWorkflow, executeWorkflow2
+from de.mindscan.ai.petk.main.wf_executor import prepareWorkflow, executeWorkflow
 
 # Set the wide mode and application name
 st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
@@ -519,7 +519,7 @@ def render_ai_task_graph_tab(tab):
         runme = st.button("Execute",key=workflow.getWorkflowKey()+".execute")
         if(runme):
             logcontainer = st.container()
-            executeWorkflow2(workflow, logcontainer)
+            executeWorkflow(workflow, logcontainer)
     
         #st.write(ai_task_descriptor)
         pass
@@ -547,7 +547,7 @@ def render_translator_test_tab(tab):
         runme = st.button("Execute")
         if(runme):
             logcontainer = st.container()
-            executeWorkflow2(workflow,logcontainer)
+            executeWorkflow(workflow,logcontainer)
     
         #st.write(ai_task_descriptor)
         
