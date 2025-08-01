@@ -165,6 +165,33 @@ def aivm_execute_instruction_nop(execution_environment, current_node):
     return execution_environment
 
 
+def aivm_execute_instruction_assert_fail(execution_environment, current_node):
+    st.write("## RESULT: FAIL")
+    return execution_environment
+
+
+def aivm_execute_instruction_assert_success(execution_environment, current_node):
+    st.write("## RESULT: SUCCESS")
+    return execution_environment
+
+def aivm_execute_instruction_qa_template(execution_environment, current_node, endpoint, model_task, extra_stopwords):
+    invoker = RemoteApiModelInvoker(None)    
+    # now execute the model task for a given endpoint and retrieve the answer
+    llm_result = invoker.invoke_backend(endpoint, model_task, {
+            "extra_stopwords":extra_stopwords})
+    ## update taskRuntimeEnvironment
+    outputs = current_node["outputs"]
+    for connector in outputs:
+        if connector["source"] == "local.model_task":
+            value = model_task
+        elif connector["source"] == "result.llm.response.content":
+            value = llm_result['llm.response.content']
+        else:
+            value = None
+        execution_environment[connector["target"]] = value
+    
+    return execution_environment, llm_result
+
 def executeWorkflow(workflow, log_container):
     # TODO: 
     execution_environment = workflow.getExecutionEnvironment()
@@ -175,7 +202,6 @@ def executeWorkflow(workflow, log_container):
         st.write(execution_environment)
         ## now execute the graph....
         
-        invoker = RemoteApiModelInvoker(None)
         endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
         
         # 1st step, first shot translation to japanese
@@ -187,7 +213,6 @@ def executeWorkflow(workflow, log_container):
         current_instruction_pointer = workflow.getStartInstructionPointer()
         
         while current_instruction_pointer is not None:
-            
             model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_instruction_pointer, workflow,  model_template, execution_environment)
             
             # workflow_node = workflow.getWorkflowNode(current_instruction_pointer)
@@ -225,7 +250,6 @@ def executeWorkflow(workflow, log_container):
                 id_calculate_next_instructionpointer = False
                 current_instruction_pointer = aivm_execute_instruction_if(execution_environment, current_node, workflow, current_instruction_pointer)
 
-
             # -------------------
             # unit test primitive
             # also flow primitive
@@ -233,14 +257,13 @@ def executeWorkflow(workflow, log_container):
             elif current_node_type == "ASSERT_FAIL":
                 id_break_on_instruction = True
                 id_calculate_next_instructionpointer = False
-                
-                st.write("## RESULT: FAIL")
+                execution_environment = aivm_execute_instruction_assert_fail(execution_environment, current_node)
 
             elif current_node_type == "ASSERT_SUCCESS":
                 id_break_on_instruction = True
                 id_calculate_next_instructionpointer = False
+                execution_environment = aivm_execute_instruction_assert_success(execution_environment, current_node)
                 
-                st.write("## RESULT: SUCCESS")
             
             # --------------------
             # Operation Primitives
@@ -274,22 +297,7 @@ def executeWorkflow(workflow, log_container):
                 st.write("Query")
                 st.code(model_task,language="markdown")
                 
-                # now execute the model task for a given endpoint and retrieve the answer
-                llm_result = invoker.invoke_backend(endpoint, model_task, {
-                        "extra_stopwords":extra_stopwords
-                    } )
-                
-                ## update taskRuntimeEnvironment
-                outputs = current_node["outputs"]
-                for connector in outputs:
-                    if connector["source"] == "local.model_task":
-                        value = model_task
-                    elif connector["source"] == "result.llm.response.content":
-                        value = llm_result['llm.response.content']
-                    else:
-                        value = None
-                        
-                    execution_environment[connector["target"]] = value
+                execution_environment, llm_result = aivm_execute_instruction_qa_template(execution_environment, current_node, endpoint, model_task, extra_stopwords)
                     
                 st.write("Answer")
                 st.code(llm_result['llm.response.content'])
