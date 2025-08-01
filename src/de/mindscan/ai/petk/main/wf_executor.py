@@ -228,7 +228,8 @@ def executeWorkflow(workflow, log_container):
             # ADD
             # CMP
             # SUB
-             
+            # AND 
+            # OR
             
             elif current_node_type == "AITaskTemplate":
                 # execute this
