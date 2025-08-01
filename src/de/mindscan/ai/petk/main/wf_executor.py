@@ -85,7 +85,6 @@ def executeRenderTemplateNode(execution_environment, current_node):
     for inputconnector in inputs:
         if inputconnector["target"] == "template":
             template = execution_environment[inputconnector["source"]]
-            break
         
     template_engine = AIPETKTemplateEngine(None)
     rendered = template_engine.evaluateTemplate(template, execution_environment)
@@ -104,7 +103,6 @@ def executeReadUploadedFileNode(execution_environment, current_node, outputs, co
     for inputconnector in inputs:
         if inputconnector["target"] == "file":
             inputfile = execution_environment[inputconnector["source"]]
-            break
     
     if inputfile is not None:
         outputs = current_node["outputs"]
@@ -122,14 +120,13 @@ def executeReadUploadedFileNode(execution_environment, current_node, outputs, co
             
     return execution_environment
 
-def executeBooleanPrimitiveNode(execution_environment, current_node):
+def aivm_execute_instruction_boolean(execution_environment, current_node):
     # from for conversion
     fromValue = None
     inputs = current_node["inputs"]
     for inputconnector in inputs:
         if inputconnector["target"] == "fromValue":
             fromValue = execution_environment[inputconnector["source"]]
-            break
     
     outputs = current_node["outputs"]
     # TODO: toString....
@@ -150,6 +147,23 @@ def executeBooleanPrimitiveNode(execution_environment, current_node):
         execution_environment[connector["target"]] = value
     
     return execution_environment
+
+
+def aivm_execute_instruction_if(execution_environment, current_node, workflow, current_instruction_pointer):
+    condition = False
+    inputs = current_node["inputs"]
+    for inputconnector in inputs:
+        if inputconnector["target"] == "condition":
+            condition = execution_environment[inputconnector["source"]]
+    
+    if condition:
+        return workflow.getNextNodeName(current_instruction_pointer, "then")
+
+    return workflow.getNextNodeName(current_instruction_pointer, "else")
+
+def aivm_execute_instruction_nop(execution_environment, current_node):
+    return execution_environment
+
 
 def executeWorkflow(workflow, log_container):
     # TODO: 
@@ -208,43 +222,35 @@ def executeWorkflow(workflow, log_container):
             # Flow-Primitives
             #----------------
             if current_node_type == "IF":
-                condition = False
-                inputs = current_node["inputs"]
-                for inputconnector in inputs:
-                    if inputconnector["target"] == "condition":
-                        condition = execution_environment[inputconnector["source"]]
-                        break
-                if condition:
-                    current_instruction_pointer = workflow.getNextNodeName(current_instruction_pointer,"then")
-                else:
-                    current_instruction_pointer = workflow.getNextNodeName(current_instruction_pointer,"else")
-                #  avoid calculating the next node
-                
                 id_calculate_next_instructionpointer = False
+                current_instruction_pointer = aivm_execute_instruction_if(execution_environment, current_node, workflow, current_instruction_pointer)
+
 
             # -------------------
             # unit test primitive
             # also flow primitive
             # ------------------- 
             elif current_node_type == "ASSERT_FAIL":
-                st.write("## RESULT: FAIL")
                 id_break_on_instruction = True
                 id_calculate_next_instructionpointer = False
+                
+                st.write("## RESULT: FAIL")
 
             elif current_node_type == "ASSERT_SUCCESS":
-                st.write("## RESULT: SUCCESS")
                 id_break_on_instruction = True
                 id_calculate_next_instructionpointer = False
+                
+                st.write("## RESULT: SUCCESS")
             
             # --------------------
             # Operation Primitives
             # --------------------
             # NOP
             elif current_node_type == "NOP":
-                pass
+                execution_environment = aivm_execute_instruction_nop(execution_environment, current_node)
             # BOOLEAN Primitive
             elif current_node_type == "BOOLEAN":
-                execution_environment = executeBooleanPrimitiveNode(execution_environment, current_node)
+                execution_environment = aivm_execute_instruction_boolean(execution_environment, current_node)
                 
 
             # FOREACH
@@ -269,7 +275,6 @@ def executeWorkflow(workflow, log_container):
                 st.code(model_task,language="markdown")
                 
                 # now execute the model task for a given endpoint and retrieve the answer
-                    
                 llm_result = invoker.invoke_backend(endpoint, model_task, {
                         "extra_stopwords":extra_stopwords
                     } )
