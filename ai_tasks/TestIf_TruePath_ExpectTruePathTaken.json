@@ -23,9 +23,10 @@
 					{
 						"target":"condition",
 						"source":"valueToTest",
+						"__datatype":"boolean"
 					}
 				],
-				"output":[],
+				"outputs":[]
 			},
 			{
 				"taskname":"assertSUCCESS",
@@ -33,7 +34,7 @@
 				"version":"1.0.0",
 				"type":"ASSERT_SUCCESS",
 				"inputs":[],
-				"outputs":[],
+				"outputs":[]
 			},
 			{
 				"taskname":"assertFAIL",
@@ -41,7 +42,7 @@
 				"version":"1.0.0",
 				"type":"ASSERT_FAIL",
 				"inputs":[],
-				"outputs":[],
+				"outputs":[]
 			}
 		]
 	},

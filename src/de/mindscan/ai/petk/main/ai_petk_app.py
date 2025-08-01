@@ -304,6 +304,15 @@ def render_rendertemplate_task(current_task_node):
     # then present the template
     # his should be something which the render template node should be doing
     
+def render_if_primitive(current_task_node):
+    pass
+
+def render_assertfail_primitive(current_task_node):
+    pass
+
+def render_assertsuccess_primitive(current_task_node):
+    pass
+    
 def render_unknowntype_task(curret_task_node):
     st.write("#### This is an unknown Task to render...")
     
@@ -311,6 +320,9 @@ render_tasktype_map = {
     'ReadUploadedFile': render_readuploadedfile_task,
     'AITaskTemplate': render_ai_template_task,
     'RenderTemplate': render_rendertemplate_task,
+    'IF': render_if_primitive,
+    'ASSERT_FAIL': render_assertfail_primitive,
+    'ASSERT_SUCCESS': render_assertsuccess_primitive,
     'default': render_unknowntype_task
     }
 
