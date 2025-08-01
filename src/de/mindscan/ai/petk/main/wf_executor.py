@@ -177,6 +177,31 @@ def executeWorkflow(workflow, log_container):
                     current_instruction_pointer = workflow.getNextNodeName(current_instruction_pointer,"else")
                 #  avoid calculating the next node
                 continue
+            
+            # BOOLEAN Primitive
+            elif current_node_type == "BOOLEAN":
+                # from for conversion
+                fromValue = None
+                inputs = current_node["inputs"]
+                for inputconnector in inputs:
+                    if inputconnector["target"] == "from":
+                        fromValue = execution_environment[inputconnector["source"]]
+                        break
+                
+                outputs = current_node["outputs"]
+                # TODO: toString....
+                for connector in outputs:
+                    if connector["source"] == "true":
+                        value = True
+                    elif connector["source"] == "false":
+                        value = False
+                    elif connector["source"] == "asBoolean":
+                        value = ( fromValue == "true" ) 
+                    else:
+                        value = False
+                        
+                    execution_environment[connector["target"]] = value
+
             # unit test primitive 
             elif current_node_type == "ASSERT_FAIL":
                 st.write("## RESULT: FAIL")
@@ -193,6 +218,10 @@ def executeWorkflow(workflow, log_container):
             # INVOKE_WORKFLOW - invoke other work flow
             # CALL - invoke another part of the local graph node 
             # RETURN
+            # ---
+            # BOOLEAN TRUE
+            # BOOLEAN FALSE
+            # BOOLEAN toBoolean
             # ---
             # ADD
             # CMP
