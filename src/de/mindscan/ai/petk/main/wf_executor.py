@@ -199,6 +199,16 @@ def aivm_execute_instruction_qa_template(execution_environment, current_node, en
     
     return execution_environment
 
+
+def aivm_execute_instruction_array_foreach(execution_environment, current_node, workflow,current_instruction_pointer):
+    # TODO we have to process the input, such that we know the array we want to loop over and the variable name to fill...
+    # then we need to determine, whether we can loop over it
+    # if yes we call someone, who can help us with executing the sub graph
+    body_nodes = workflow.getNextNodeName(current_instruction_pointer, "body")
+    
+    return execution_environment
+
+
 def executeWorkflow(workflow, log_container):
     # TODO: 
     execution_environment = workflow.getExecutionEnvironment()
@@ -244,6 +254,10 @@ def executeWorkflow(workflow, log_container):
             
             id_calculate_next_instructionpointer = True
             id_break_on_instruction = False
+            id_endloop_as_break = False
+            id_endloop_as_continue = False
+            #id_endloop_as_void = False
+            
             
             
             # -------------------------
@@ -259,6 +273,20 @@ def executeWorkflow(workflow, log_container):
             if current_node_type == "IF":
                 id_calculate_next_instructionpointer = False
                 current_instruction_pointer = aivm_execute_instruction_if(execution_environment, current_node, workflow, current_instruction_pointer)
+            elif current_node_type == "ARRAY_FOREACH":
+                id_calculate_next_instructionpointer = True
+                execution_environment = aivm_execute_instruction_array_foreach(execution_environment, current_node, workflow, current_instruction_pointer)
+            # ---
+            # FOREACH
+            # CONTINUE - instruct a for-loop to continue or end
+            # ** basically we must not calculate the next instruction
+            # ** we must break the current loop, we must indicate, that a continue occurred, this will be determiend by the caller, how to handle this
+            # ** locally we don't know what to do further, only the one who executes the foreach node, knows
+            # BREAK - instruct a for loop to end the for loop
+            # ** basically we must not calculate the next instruction
+            # ** we must break the current loop, we must indicate, that a break occurred, this will be determined by the caller, how to handle this
+            # ** locally we don't know what to do further, only the one who executes the foreach node, knows
+            
 
             # -------------------
             # unit test primitive
@@ -285,9 +313,6 @@ def executeWorkflow(workflow, log_container):
             elif current_node_type == "BOOLEAN":
                 execution_environment = aivm_execute_instruction_boolean(execution_environment, current_node)
                 
-            # FOREACH
-            # CONTINUE - instruct a for-loop to continue or end
-            # BREAK - instruct a for loop to end the for loop
             # ---
             # INVOKE_WORKFLOW - invoke other work flow
             # CALL - invoke another part of the local graph node 

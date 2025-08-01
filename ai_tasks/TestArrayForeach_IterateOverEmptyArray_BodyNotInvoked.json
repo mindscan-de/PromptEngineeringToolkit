@@ -1,0 +1,64 @@
+{
+	"__metadata": {
+		"name":"TestArryForeach_EmptyArray_BodyNotInvoked",
+		"short_description":"### Unittest for foreach Loop Nodes",
+		"version":"1.0.0",
+		"__description":"this is a unit test performing an if operation" 
+	},
+	
+	"execute": {
+		"entry":"nodeToTest",
+		"inputfields": {
+		}
+	},
+	
+	"nodedata":{
+		"nodes": [
+			{
+				"taskname":"nodeToTest",
+				"short_task_header":"",
+				"version":"1.0.0",
+				"type":"ARRAY_FOREACH",
+				"inputs":[
+					{
+						"target":"iterateOver",
+						"source":"emptyArray",
+						"__datatype":"array"
+					}
+					
+				],
+				"outputs":[]
+			},
+			{
+				"taskname":"assertSUCCESS",
+				"short_task_header":"",
+				"version":"1.0.0",
+				"type":"ASSERT_SUCCESS",
+				"inputs":[],
+				"outputs":[]
+			},
+			{
+				"taskname":"assertFAIL",
+				"short_task_header":"",
+				"version":"1.0.0",
+				"type":"ASSERT_FAIL",
+				"inputs":[],
+				"outputs":[]
+			}
+		]
+	},
+	
+	"edgedata": {
+		"connections":{
+			"nodeToTest":{
+				"body":["assertFAIL"],
+				"next":["assertSUCCESS"]
+			}
+		}
+	},
+	
+	"json_data_dictionary":{
+		"emptyArray":[]
+	}
+	
+}
