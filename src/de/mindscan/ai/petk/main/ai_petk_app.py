@@ -582,8 +582,9 @@ def render_unittest_runner_tab(tab):
         run_test = st.button("Run test")
         with test_result_column:
             if run_test:
-                
-                pass
+                test_workflow_file = os.path.join(ai_task_directory, selected_test)
+                test_workflow = prepareWorkflow(test_workflow_file)
+                executeWorkflow(test_workflow, test_result_column)
             else:
                 st.write("## No Result")
         pass
