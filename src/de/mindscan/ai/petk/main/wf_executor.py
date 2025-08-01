@@ -147,7 +147,7 @@ def executeWorkflow(workflow, log_container):
             model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, workflow,  model_template, execution_environment)
             
             
-            workflow_node = workflow.getWorkflowNode(current_node_name)
+            # workflow_node = workflow.getWorkflowNode(current_node_name)
             # instead of the next code, we only need to execute the workflow_node, some of them are statefule, and some aren't
             # workflow_executor.execute(worflow_node, execution_environment)
             
