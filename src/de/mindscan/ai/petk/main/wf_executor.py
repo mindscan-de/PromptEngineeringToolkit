@@ -78,6 +78,50 @@ def buildModelTaskFromJson(current_node_name, workflow, model_template, taskRunt
 
 
 # Basic workflow execution extraction
+
+def executeRenderTemplateNode(execution_environment, current_node):
+    template = ""
+    inputs = current_node["inputs"]
+    for inputconnector in inputs:
+        if inputconnector["target"] == "template":
+            template = execution_environment[inputconnector["source"]]
+            break
+        
+    template_engine = AIPETKTemplateEngine(None)
+    rendered = template_engine.evaluateTemplate(template, execution_environment)
+    
+    outputs = current_node["outputs"]
+    for connector in outputs:
+        if connector["source"] == "rendered":
+            execution_environment[connector["target"]] = rendered
+
+    return execution_environment
+
+
+def executeReadUploadedFileNode(execution_environment, current_node, outputs, connector, value):
+    inputfile = None
+    inputs = current_node["inputs"]
+    for inputconnector in inputs:
+        if inputconnector["target"] == "file":
+            inputfile = execution_environment[inputconnector["source"]]
+            break
+    
+    if inputfile is not None:
+        outputs = current_node["outputs"]
+        for connector in outputs:
+            value = None
+            if connector["source"] == "file.name":
+                value = inputfile.name
+            elif connector["source"] == "file.content.utf8":
+                value = inputfile.getvalue().decode("utf-8")
+            elif connector["source"] == "file.content.bytes":
+                value = inputfile.getValue()
+            else:
+                value = None
+            execution_environment[connector["target"]] = value
+            
+    return execution_environment
+
 def executeWorkflow(workflow, log_container):
     # TODO: 
     execution_environment = workflow.getExecutionEnvironment()
@@ -103,10 +147,43 @@ def executeWorkflow(workflow, log_container):
             model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, workflow,  model_template, execution_environment)
             
             
+            workflow_node = workflow.getWorkflowNode(current_node_name)
+            # instead of the next code, we only need to execute the workflow_node, some of them are statefule, and some aren't
+            # workflow_executor.execute(worflow_node, execution_environment)
+            
+            
+            # there are conditional nodes, which will change the outcome, where to continue next
+            # there should be a for / foreach nodes, which should handle 
+            # call/return
+            # goto / contunie / break
+            # a for wil be a separate call stack for more simplicity in the call stack.
+            
+            
             
             current_node_type = current_node["type"]
             st.write("current Node Type : "+current_node_type ) 
-            if current_node_type == "AITaskTemplate":
+
+            if current_node_type == "IF":
+                condition = False
+                inputs = current_node["inputs"]
+                for inputconnector in inputs:
+                    if inputconnector["target"] == "condition":
+                        condition = execution_environment[inputconnector["source"]]
+                        break
+                if condition:
+                    current_node_name = workflow.getNextNodeName(current_node_name,"then")
+                else:
+                    current_node_name = workflow.getNextNodeName(current_node_name,"else")
+                #  avoid calculating the next node
+                continue
+            
+            elif current_node_type == "ASSERT_FAIL":
+                st.write("## RESULT: FAIL")
+                break
+            elif current_node_type == "ASSERT_SUCCESS":
+                st.write("## RESULT: SUCCESS")
+                break
+            elif current_node_type == "AITaskTemplate":
                 # execute this
                 # update the environment according to the outputs
                 st.write(current_node["short_task_header"])
@@ -134,46 +211,9 @@ def executeWorkflow(workflow, log_container):
                 st.write("Answer")
                 st.code(llm_result['llm.response.content'])
             elif current_node_type == "ReadUploadedFile":
-                inputfile = None
-                
-                inputs = current_node["inputs"]
-                for inputconnector in inputs:
-                    if inputconnector["target"] == "file":
-                        inputfile = execution_environment[inputconnector["source"]]
-                        break 
-    
-                if inputfile is not None:
-                    outputs = current_node["outputs"]
-                    for connector in outputs:
-                        value = None
-                        if connector["source"] == "file.name":
-                            value = inputfile.name
-                        elif connector["source"] == "file.content.utf8":
-                            value = inputfile.getvalue().decode("utf-8")
-                        elif connector["source"] == "file.content.bytes":
-                            value = inputfile.getValue()
-                        else:
-                            value = None
-                            
-                        execution_environment[connector["target"]] = value
+                execution_environment = executeReadUploadedFileNode(execution_environment, current_node)
             elif current_node_type == "RenderTemplate":
-                template = ""
-                inputs = current_node["inputs"]
-                for inputconnector in inputs:
-                    if inputconnector["target"] == "template":
-                        template = execution_environment[inputconnector["source"]]
-                        break 
-                
-                template_engine = AIPETKTemplateEngine(None)
-                rendered = template_engine.evaluateTemplate(template, execution_environment)
-                            
-                outputs = current_node["outputs"]
-                for connector in outputs:
-                    value = None
-                    if connector["source"] == "rendered":
-                        execution_environment[connector["target"]] = rendered
-                
-                pass
+                execution_environment = executeRenderTemplateNode(execution_environment, current_node)
             else:
                 pass
             
