@@ -62,7 +62,7 @@ class AIWorkflow(object):
     def getEdgeData(self):
         return self.__edgedata
     
-    def getEntryNodeName(self):
+    def getStartInstructionPointer(self):
         return self.getExecutionInstructions()['entry']
     
     def getNextNodeName(self, current_node_name, trasition_name="next"):

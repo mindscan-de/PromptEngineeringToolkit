@@ -141,7 +141,7 @@ def executeWorkflow(workflow, log_container):
         model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
         
         ## TODO iterate, while the state exists, of the current name is not None
-        current_instruction_pointer = workflow.getEntryNodeName()
+        current_instruction_pointer = workflow.getStartInstructionPointer()
         
         while current_instruction_pointer is not None:
             model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_instruction_pointer, workflow,  model_template, execution_environment)
@@ -189,6 +189,10 @@ def executeWorkflow(workflow, log_container):
             # FOREACH
             # CONTINUE - instruct a for-loop to continue or end
             # BREAK - instruct a for loop to end the for loop
+            # ---
+            # INVOKE_WORKFLOW - invoke other work flow
+            # CALL - invoke another part of the local graph node 
+            # RETURN
             # ---
             # ADD
             # CMP
