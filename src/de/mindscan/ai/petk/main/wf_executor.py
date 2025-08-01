@@ -243,6 +243,9 @@ def executeWorkflow(workflow, log_container):
             # Execute AI-VM-Instruction 
             # -------------------------
             
+            # TODO: the next thing is that, we need to towk towards an table based execution
+            # TODO: before that we need to align all calls 
+            
             # ---------------
             # Flow-Primitives
             #----------------
