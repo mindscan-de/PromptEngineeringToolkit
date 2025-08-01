@@ -184,7 +184,7 @@ def executeWorkflow(workflow, log_container):
                 fromValue = None
                 inputs = current_node["inputs"]
                 for inputconnector in inputs:
-                    if inputconnector["target"] == "from":
+                    if inputconnector["target"] == "fromValue":
                         fromValue = execution_environment[inputconnector["source"]]
                         break
                 
