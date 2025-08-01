@@ -196,7 +196,9 @@ def executeWorkflow(workflow, log_container):
                     elif connector["source"] == "false":
                         value = False
                     elif connector["source"] == "asBoolean":
-                        value = ( fromValue == "true" ) 
+                        value = ( fromValue == "true" )
+                    elif connector["source"] == "not":
+                        value = not( fromValue == "true" )
                     else:
                         value = False
                         
