@@ -79,7 +79,7 @@ def buildModelTaskFromJson(current_node_name, workflow, model_template, taskRunt
 
 # Basic workflow execution extraction
 
-def executeRenderTemplateNode(execution_environment, current_node):
+def aivm_execute_instruction_rendertemplate(execution_environment, current_node):
     template = ""
     inputs = current_node["inputs"]
     for inputconnector in inputs:
@@ -97,7 +97,7 @@ def executeRenderTemplateNode(execution_environment, current_node):
     return execution_environment
 
 
-def executeReadUploadedFileNode(execution_environment, current_node, outputs, connector, value):
+def aivm_execute_instruction_readuploadedfile(execution_environment, current_node, outputs, connector, value):
     inputfile = None
     inputs = current_node["inputs"]
     for inputconnector in inputs:
@@ -175,6 +175,10 @@ def aivm_execute_instruction_assert_success(execution_environment, current_node)
     return execution_environment
 
 def aivm_execute_instruction_qa_template(execution_environment, current_node, endpoint, model_task, extra_stopwords):
+    st.write(current_node["short_task_header"])
+    st.write("Query")
+    st.code(model_task,language="markdown")
+    
     invoker = RemoteApiModelInvoker(None)    
     # now execute the model task for a given endpoint and retrieve the answer
     llm_result = invoker.invoke_backend(endpoint, model_task, {
@@ -189,8 +193,11 @@ def aivm_execute_instruction_qa_template(execution_environment, current_node, en
         else:
             value = None
         execution_environment[connector["target"]] = value
+        
+    st.write("Answer")
+    st.code(llm_result['llm.response.content'])
     
-    return execution_environment, llm_result
+    return execution_environment
 
 def executeWorkflow(workflow, log_container):
     # TODO: 
@@ -278,7 +285,6 @@ def executeWorkflow(workflow, log_container):
             elif current_node_type == "BOOLEAN":
                 execution_environment = aivm_execute_instruction_boolean(execution_environment, current_node)
                 
-
             # FOREACH
             # CONTINUE - instruct a for-loop to continue or end
             # BREAK - instruct a for loop to end the for loop
@@ -294,20 +300,11 @@ def executeWorkflow(workflow, log_container):
             # OR
             
             elif current_node_type == "AITaskTemplate":
-                # execute this
-                # update the environment according to the outputs
-                st.write(current_node["short_task_header"])
-                st.write("Query")
-                st.code(model_task,language="markdown")
-                
-                execution_environment, llm_result = aivm_execute_instruction_qa_template(execution_environment, current_node, endpoint, model_task, extra_stopwords)
-                    
-                st.write("Answer")
-                st.code(llm_result['llm.response.content'])
+                execution_environment = aivm_execute_instruction_qa_template(execution_environment, current_node, endpoint, model_task, extra_stopwords)
             elif current_node_type == "ReadUploadedFile":
-                execution_environment = executeReadUploadedFileNode(execution_environment, current_node)
+                execution_environment = aivm_execute_instruction_readuploadedfile(execution_environment, current_node)
             elif current_node_type == "RenderTemplate":
-                execution_environment = executeRenderTemplateNode(execution_environment, current_node)
+                execution_environment = aivm_execute_instruction_rendertemplate(execution_environment, current_node)
             else:
                 pass
             
@@ -324,7 +321,8 @@ def executeWorkflow(workflow, log_container):
             
             # Do we need to calculate the next instruction pointer?
             if id_calculate_next_instructionpointer:
-                # DEPENDING on the decoded Instruction type, we need to encode whethet to determine the next Node
+                # DEPENDING on the decoded Instruction type, we need to encode whether to determine the next Node
+                # this should be "currentnode.getNextInstructionPointer()" oder so
                 current_instruction_pointer = workflow.getNextNodeName(current_instruction_pointer,"next")
         
         # Now do process the output nodes
