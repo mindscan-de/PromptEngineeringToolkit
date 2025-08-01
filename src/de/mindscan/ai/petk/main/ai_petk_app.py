@@ -579,7 +579,9 @@ def render_unittest_runner_tab(tab):
         if selected_test is None:
             return
         
-        run_test = st.button("Run test")
+        with test_selection_column:
+            run_test = st.button("Run test")
+            
         with test_result_column:
             if run_test:
                 test_workflow_file = os.path.join(ai_task_directory, selected_test)
