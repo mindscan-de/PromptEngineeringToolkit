@@ -141,13 +141,13 @@ def executeWorkflow(workflow, log_container):
         model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
         
         ## TODO iterate, while the state exists, of the current name is not None
-        current_node_name = workflow.getEntryNodeName()
+        current_instruction_pointer = workflow.getEntryNodeName()
         
-        while current_node_name is not None:
-            model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_node_name, workflow,  model_template, execution_environment)
+        while current_instruction_pointer is not None:
+            model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_instruction_pointer, workflow,  model_template, execution_environment)
             
             
-            # workflow_node = workflow.getWorkflowNode(current_node_name)
+            # workflow_node = workflow.getWorkflowNode(current_instruction_pointer)
             # instead of the next code, we only need to execute the workflow_node, some of them are statefule, and some aren't
             # workflow_executor.execute(worflow_node, execution_environment)
             
@@ -163,6 +163,7 @@ def executeWorkflow(workflow, log_container):
             current_node_type = current_node["type"]
             st.write("current Node Type : "+current_node_type ) 
 
+            # Primitives
             if current_node_type == "IF":
                 condition = False
                 inputs = current_node["inputs"]
@@ -171,18 +172,29 @@ def executeWorkflow(workflow, log_container):
                         condition = execution_environment[inputconnector["source"]]
                         break
                 if condition:
-                    current_node_name = workflow.getNextNodeName(current_node_name,"then")
+                    current_instruction_pointer = workflow.getNextNodeName(current_instruction_pointer,"then")
                 else:
-                    current_node_name = workflow.getNextNodeName(current_node_name,"else")
+                    current_instruction_pointer = workflow.getNextNodeName(current_instruction_pointer,"else")
                 #  avoid calculating the next node
                 continue
-            
+            # unit test primitive 
             elif current_node_type == "ASSERT_FAIL":
                 st.write("## RESULT: FAIL")
                 break
+            # unit test primitive
             elif current_node_type == "ASSERT_SUCCESS":
                 st.write("## RESULT: SUCCESS")
                 break
+            
+            # FOREACH
+            # CONTINUE - instruct a for-loop to continue or end
+            # BREAK - instruct a for loop to end the for loop
+            # ---
+            # ADD
+            # CMP
+            # SUB
+             
+            
             elif current_node_type == "AITaskTemplate":
                 # execute this
                 # update the environment according to the outputs
@@ -220,7 +232,7 @@ def executeWorkflow(workflow, log_container):
             st.write("updated environment")
             st.code(execution_environment, language="json")
             
-            current_node_name = workflow.getNextNodeName(current_node_name)
+            current_instruction_pointer = workflow.getNextNodeName(current_instruction_pointer,"next")
         
         # Now do process the output nodes
         
