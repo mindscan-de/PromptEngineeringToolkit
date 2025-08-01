@@ -173,8 +173,8 @@ def executeWorkflow(workflow, log_container):
         current_instruction_pointer = workflow.getStartInstructionPointer()
         
         while current_instruction_pointer is not None:
-            model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_instruction_pointer, workflow,  model_template, execution_environment)
             
+            model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_instruction_pointer, workflow,  model_template, execution_environment)
             
             # workflow_node = workflow.getWorkflowNode(current_instruction_pointer)
             # instead of the next code, we only need to execute the workflow_node, some of them are statefule, and some aren't
@@ -191,6 +191,19 @@ def executeWorkflow(workflow, log_container):
             current_node_type = current_node["type"]
             st.write("current Node Type : "+current_node_type ) 
 
+
+            # -------------------------------------------------
+            # AI-VM Instruction decoder for current instruction
+            # -------------------------------------------------
+            
+            id_calculate_next_instructionpointer = True
+            id_break_on_instruction = False
+            
+            
+            # -------------------------
+            # Execute AI-VM-Instruction 
+            # -------------------------
+            
             # ---------------
             # Flow-Primitives
             #----------------
@@ -206,20 +219,22 @@ def executeWorkflow(workflow, log_container):
                 else:
                     current_instruction_pointer = workflow.getNextNodeName(current_instruction_pointer,"else")
                 #  avoid calculating the next node
-                continue
+                
+                id_calculate_next_instructionpointer = False
 
-            
             # -------------------
             # unit test primitive
             # also flow primitive
             # ------------------- 
             elif current_node_type == "ASSERT_FAIL":
                 st.write("## RESULT: FAIL")
-                break
+                id_break_on_instruction = True
+                id_calculate_next_instructionpointer = False
+
             elif current_node_type == "ASSERT_SUCCESS":
                 st.write("## RESULT: SUCCESS")
-                break
-            
+                id_break_on_instruction = True
+                id_calculate_next_instructionpointer = False
             
             # --------------------
             # Operation Primitives
@@ -282,8 +297,19 @@ def executeWorkflow(workflow, log_container):
             
             st.write("updated environment")
             st.code(execution_environment, language="json")
+
+            # ------------
+            # UPDATE AI-VM
+            # ------------ 
             
-            current_instruction_pointer = workflow.getNextNodeName(current_instruction_pointer,"next")
+            # Do we need to stop?
+            if id_break_on_instruction:
+                break
+            
+            # Do we need to calculate the next instruction pointer?
+            if id_calculate_next_instructionpointer:
+                # DEPENDING on the decoded Instruction type, we need to encode whethet to determine the next Node
+                current_instruction_pointer = workflow.getNextNodeName(current_instruction_pointer,"next")
         
         # Now do process the output nodes
         
