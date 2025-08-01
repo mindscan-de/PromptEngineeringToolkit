@@ -571,6 +571,7 @@ def render_unittest_runner_tab(tab):
         # TODO provide an execution Button for the test.
         workflows = collect_workflows()
         test_workflows = [ workflow for workflow in workflows if workflow.startswith("Test")]
+        test_workflows.sort()
         test_selection_column, test_result_column = st.columns([40,60])
         
         with test_selection_column:
