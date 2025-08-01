@@ -188,7 +188,6 @@ def executeWorkflow(workflow, log_container):
             # a for wil be a separate call stack for more simplicity in the call stack.
             
             
-            
             current_node_type = current_node["type"]
             st.write("current Node Type : "+current_node_type ) 
 
@@ -208,26 +207,31 @@ def executeWorkflow(workflow, log_container):
                     current_instruction_pointer = workflow.getNextNodeName(current_instruction_pointer,"else")
                 #  avoid calculating the next node
                 continue
-            
-            # --------------------
-            # Operation Primitives
-            # --------------------
-            # BOOLEAN Primitive
-            elif current_node_type == "BOOLEAN":
-                execution_environment = executeBooleanPrimitiveNode(execution_environment, current_node)
-                
-            elif current_node_type == "NOP":
-                pass
 
-            # unit test primitive 
+            
+            # -------------------
+            # unit test primitive
+            # also flow primitive
+            # ------------------- 
             elif current_node_type == "ASSERT_FAIL":
                 st.write("## RESULT: FAIL")
                 break
-            # unit test primitive
             elif current_node_type == "ASSERT_SUCCESS":
                 st.write("## RESULT: SUCCESS")
                 break
             
+            
+            # --------------------
+            # Operation Primitives
+            # --------------------
+            # NOP
+            elif current_node_type == "NOP":
+                pass
+            # BOOLEAN Primitive
+            elif current_node_type == "BOOLEAN":
+                execution_environment = executeBooleanPrimitiveNode(execution_environment, current_node)
+                
+
             # FOREACH
             # CONTINUE - instruct a for-loop to continue or end
             # BREAK - instruct a for loop to end the for loop
