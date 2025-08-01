@@ -565,12 +565,36 @@ def render_translator_test_tab(tab):
         
         pass
         
+def render_unittest_runner_tab(tab):
+    with tab:
+        # TODO find all tests, and display them in a select box
+        # TODO provide an execution Button for the test.
+        workflows = collect_workflows()
+        test_workflows = [ workflow for workflow in workflows if workflow.startswith("Test")]
+        test_selection_column, test_result_column = st.columns([40,60])
+        
+        with test_selection_column:
+            selected_test = st.selectbox("Choose the test workflow to run", test_workflows )
+            
+        if selected_test is None:
+            return
+        
+        run_test = st.button("Run test")
+        with test_result_column:
+            if run_test:
+                
+                pass
+            else:
+                st.write("## No Result")
+        pass
+    pass
         
 ## ----------------------------
 ## Main UI
 ## ---------------------------- 
 
-prompt_enginener_tab, workflow_agent_engineer_tab, settings_tab, simple_invoker_tester_tab, aitask_graph_tab,translator_test_tab = st.tabs(['LLM Prompt Engineer','LLM Workflow & Agent Engineer','Settings','Simple Invocation Tests','AITask-Graph','Translator Test'])
+tabTitles = ['LLM Prompt Engineer', 'LLM Workflow & Agent Engineer', 'Settings', 'Simple Invocation Tests', 'AITask-Graph', 'Translator Test','Unittest Runner']
+prompt_enginener_tab, workflow_agent_engineer_tab, settings_tab, simple_invoker_tester_tab, aitask_graph_tab,translator_test_tab,unittest_runner_tab = st.tabs(tabTitles)
 
 render_prompt_engineer_tab(prompt_enginener_tab)
 render_workflow_agent_engineer_tab(workflow_agent_engineer_tab)
@@ -578,3 +602,4 @@ render_settings_tab(settings_tab)
 render_simple_invoker_test_tab(simple_invoker_tester_tab)
 render_ai_task_graph_tab(aitask_graph_tab)
 render_translator_test_tab(translator_test_tab)
+render_unittest_runner_tab(unittest_runner_tab)

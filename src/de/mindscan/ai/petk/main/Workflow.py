@@ -65,9 +65,12 @@ class AIWorkflow(object):
     def getEntryNodeName(self):
         return self.getExecutionInstructions()['entry']
     
-    def getNextNodeName(self, current_node_name):
+    def getNextNodeName(self, current_node_name, trasition_name="next"):
+        ## TODO
+        ## if there s only one next node, aczally we need to ask the task node whch is the next node, instead of
+        ## asking the workflow for the next node.
         if current_node_name in self.__edgedata["connections"]:
-            return self.__edgedata["connections"][current_node_name]["next"][0] or None
+            return self.__edgedata["connections"][current_node_name][trasition_name][0] or None
         return None
 
     
