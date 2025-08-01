@@ -122,6 +122,35 @@ def executeReadUploadedFileNode(execution_environment, current_node, outputs, co
             
     return execution_environment
 
+def executeBooleanPrimitiveNode(execution_environment, current_node):
+    # from for conversion
+    fromValue = None
+    inputs = current_node["inputs"]
+    for inputconnector in inputs:
+        if inputconnector["target"] == "fromValue":
+            fromValue = execution_environment[inputconnector["source"]]
+            break
+    
+    outputs = current_node["outputs"]
+    # TODO: toString....
+    for connector in outputs:
+        if connector["source"] == "true":
+            value = True
+        elif connector["source"] == "false":
+            value = False
+        elif connector["source"] == "asBoolean":
+            # TODO check that fromValue is not None
+            value = ( fromValue == "true" )
+        elif connector["source"] == "not":
+            # TODO check that fromValue is not None
+            value = not( fromValue == "true" )
+        else:
+            value = False
+            
+        execution_environment[connector["target"]] = value
+    
+    return execution_environment
+
 def executeWorkflow(workflow, log_container):
     # TODO: 
     execution_environment = workflow.getExecutionEnvironment()
@@ -163,7 +192,9 @@ def executeWorkflow(workflow, log_container):
             current_node_type = current_node["type"]
             st.write("current Node Type : "+current_node_type ) 
 
-            # Primitives
+            # ---------------
+            # Flow-Primitives
+            #----------------
             if current_node_type == "IF":
                 condition = False
                 inputs = current_node["inputs"]
@@ -178,31 +209,15 @@ def executeWorkflow(workflow, log_container):
                 #  avoid calculating the next node
                 continue
             
+            # --------------------
+            # Operation Primitives
+            # --------------------
             # BOOLEAN Primitive
             elif current_node_type == "BOOLEAN":
-                # from for conversion
-                fromValue = None
-                inputs = current_node["inputs"]
-                for inputconnector in inputs:
-                    if inputconnector["target"] == "fromValue":
-                        fromValue = execution_environment[inputconnector["source"]]
-                        break
+                execution_environment = executeBooleanPrimitiveNode(execution_environment, current_node)
                 
-                outputs = current_node["outputs"]
-                # TODO: toString....
-                for connector in outputs:
-                    if connector["source"] == "true":
-                        value = True
-                    elif connector["source"] == "false":
-                        value = False
-                    elif connector["source"] == "asBoolean":
-                        value = ( fromValue == "true" )
-                    elif connector["source"] == "not":
-                        value = not( fromValue == "true" )
-                    else:
-                        value = False
-                        
-                    execution_environment[connector["target"]] = value
+            elif current_node_type == "NOP":
+                pass
 
             # unit test primitive 
             elif current_node_type == "ASSERT_FAIL":
@@ -220,10 +235,6 @@ def executeWorkflow(workflow, log_container):
             # INVOKE_WORKFLOW - invoke other work flow
             # CALL - invoke another part of the local graph node 
             # RETURN
-            # ---
-            # BOOLEAN TRUE
-            # BOOLEAN FALSE
-            # BOOLEAN toBoolean
             # ---
             # ADD
             # CMP

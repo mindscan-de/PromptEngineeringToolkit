@@ -1,0 +1,47 @@
+{
+	"__metadata": {
+		"name":"TestNop_ExecuteOneNop_TransitionsToNextNode",
+		"short_description":"### Unittest for Nop Nodes",
+		"version":"1.0.0",
+		"__description":"this is a unit test performing an if operation" 
+	},
+	
+	"execute": {
+		"entry":"nodeToTest",
+		"inputfields": {
+		}
+	},
+	
+	"nodedata":{
+		"nodes": [
+			{
+				"taskname":"nodeToTest",
+				"short_task_header":"",
+				"version":"1.0.0",
+				"type":"NOP",
+				"inputs":[],
+				"outputs":[]
+			},
+			{
+				"taskname":"assertSUCCESS",
+				"short_task_header":"",
+				"version":"1.0.0",
+				"type":"ASSERT_SUCCESS",
+				"inputs":[],
+				"outputs":[]
+			}
+		]
+	},
+	
+	"edgedata": {
+		"connections":{
+			"nodeToTest":{
+				"next":["assertSUCCESS"]
+			}
+		}
+	},
+	
+	"json_data_dictionary":{
+	}
+	
+}
