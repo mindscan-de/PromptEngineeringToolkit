@@ -244,8 +244,8 @@ def executeWorkflow(workflow, log_container):
             # a for wil be a separate call stack for more simplicity in the call stack.
             
             
-            current_node_type = current_node["type"]
-            st.write("current Node Type : "+current_node_type ) 
+            current_op_code = current_node["type"]
+            st.write("current Node Type : "+current_op_code ) 
 
 
             # -------------------------------------------------
@@ -270,10 +270,10 @@ def executeWorkflow(workflow, log_container):
             # ---------------
             # Flow-Primitives
             #----------------
-            if current_node_type == "IF":
+            if current_op_code == "IF":
                 id_calculate_next_instructionpointer = False
                 current_instruction_pointer = aivm_execute_instruction_if(execution_environment, current_node, workflow, current_instruction_pointer)
-            elif current_node_type == "ARRAY_FOREACH":
+            elif current_op_code == "ARRAY_FOREACH":
                 id_calculate_next_instructionpointer = True
                 execution_environment = aivm_execute_instruction_array_foreach(execution_environment, current_node, workflow, current_instruction_pointer)
             # ---
@@ -292,12 +292,12 @@ def executeWorkflow(workflow, log_container):
             # unit test primitive
             # also flow primitive
             # ------------------- 
-            elif current_node_type == "ASSERT_FAIL":
+            elif current_op_code == "ASSERT_FAIL":
                 id_break_on_instruction = True
                 id_calculate_next_instructionpointer = False
                 execution_environment = aivm_execute_instruction_assert_fail(execution_environment, current_node)
 
-            elif current_node_type == "ASSERT_SUCCESS":
+            elif current_op_code == "ASSERT_SUCCESS":
                 id_break_on_instruction = True
                 id_calculate_next_instructionpointer = False
                 execution_environment = aivm_execute_instruction_assert_success(execution_environment, current_node)
@@ -307,10 +307,10 @@ def executeWorkflow(workflow, log_container):
             # Operation Primitives
             # --------------------
             # NOP
-            elif current_node_type == "NOP":
+            elif current_op_code == "NOP":
                 execution_environment = aivm_execute_instruction_nop(execution_environment, current_node)
             # BOOLEAN Primitive
-            elif current_node_type == "BOOLEAN":
+            elif current_op_code == "BOOLEAN":
                 execution_environment = aivm_execute_instruction_boolean(execution_environment, current_node)
                 
             # ---
@@ -324,11 +324,11 @@ def executeWorkflow(workflow, log_container):
             # AND 
             # OR
             
-            elif current_node_type == "AITaskTemplate":
+            elif current_op_code == "AITaskTemplate":
                 execution_environment = aivm_execute_instruction_qa_template(execution_environment, current_node, endpoint, model_task, extra_stopwords)
-            elif current_node_type == "ReadUploadedFile":
+            elif current_op_code == "ReadUploadedFile":
                 execution_environment = aivm_execute_instruction_readuploadedfile(execution_environment, current_node)
-            elif current_node_type == "RenderTemplate":
+            elif current_op_code == "RenderTemplate":
                 execution_environment = aivm_execute_instruction_rendertemplate(execution_environment, current_node)
             else:
                 pass
