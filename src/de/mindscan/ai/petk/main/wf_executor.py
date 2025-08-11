@@ -232,7 +232,8 @@ def executeWorkflow(workflow, log_container):
         while current_instruction_pointer is not None:
             model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_instruction_pointer, workflow,  model_template, execution_environment)
             
-            # workflow_node = workflow.getWorkflowNode(current_instruction_pointer)
+            # 
+            workflow_node = workflow.getWorkflowNode(current_instruction_pointer)
             # instead of the next code, we only need to execute the workflow_node, some of them are statefule, and some aren't
             # workflow_executor.execute(worflow_node, execution_environment)
             
@@ -244,7 +245,7 @@ def executeWorkflow(workflow, log_container):
             # a for wil be a separate call stack for more simplicity in the call stack.
             
             
-            current_op_code = current_node["type"]
+            current_op_code = workflow_node.getOpCode()
             st.write("current Node Type : "+current_op_code ) 
 
 
@@ -276,16 +277,18 @@ def executeWorkflow(workflow, log_container):
             elif current_op_code == "ARRAY_FOREACH":
                 id_calculate_next_instructionpointer = True
                 execution_environment = aivm_execute_instruction_array_foreach(execution_environment, current_node, workflow, current_instruction_pointer)
-            # ---
-            # FOREACH
-            # CONTINUE - instruct a for-loop to continue or end
-            # ** basically we must not calculate the next instruction
-            # ** we must break the current loop, we must indicate, that a continue occurred, this will be determiend by the caller, how to handle this
-            # ** locally we don't know what to do further, only the one who executes the foreach node, knows
-            # BREAK - instruct a for loop to end the for loop
-            # ** basically we must not calculate the next instruction
-            # ** we must break the current loop, we must indicate, that a break occurred, this will be determined by the caller, how to handle this
-            # ** locally we don't know what to do further, only the one who executes the foreach node, knows
+            elif current_op_code == "CONTINUE":
+                # CONTINUE - instruct a for-loop to continue or end
+                # ** basically we must not calculate the next instruction
+                # ** we must break the current loop, we must indicate, that a continue occurred, this will be determiend by the caller, how to handle this
+                # ** locally we don't know what to do further, only the one who executes the foreach node, knows
+                pass
+            elif current_op_code == "BREAK":
+                # BREAK - instruct a for loop to end the for loop
+                # ** basically we must not calculate the next instruction
+                # ** we must break the current loop, we must indicate, that a break occurred, this will be determined by the caller, how to handle this
+                # ** locally we don't know what to do further, only the one who executes the foreach node, knows
+                pass
             
 
             # -------------------
@@ -317,14 +320,20 @@ def executeWorkflow(workflow, log_container):
             # INVOKE_WORKFLOW - invoke other work flow
             # CALL - invoke another part of the local graph node 
             # RETURN
+            # ** THE difference is in scoping the variables.
             # ---
             # ADD
             # CMP
             # SUB
             # AND 
             # OR
+            # INC
+            # DEC
+            
             
             elif current_op_code == "AITaskTemplate":
+                # TODO create the real 
+                # maybe shift the building the QA node into the qs_templae execute instruction qa template
                 execution_environment = aivm_execute_instruction_qa_template(execution_environment, current_node, endpoint, model_task, extra_stopwords)
             elif current_op_code == "ReadUploadedFile":
                 execution_environment = aivm_execute_instruction_readuploadedfile(execution_environment, current_node)

@@ -5,6 +5,7 @@ Created on 13.07.2025
 '''
 
 import json
+from de.mindscan.ai.petk.templateegine import AIPETKTemplateEngine
 
 AI_TASK_DESCRIPTOR_KEY_EXECUTE_INSTRUCTIONS = "execute"
 AI_TASK_DESCRIPTOR_KEY_NODEDATA = "nodedata"
@@ -12,6 +13,58 @@ AI_TASK_DESCRIPTOR_KEY_METADATA = "__metadata"
 AI_TASK_DESCRIPTOR_KEY_EDGEDATA = "edgedata"
 AI_TASK_DESCRIPTOR_KEY_DATADICTIONARY = "json_data_dictionary"
 
+class AIWorkflowNode(object):
+    def __init__(self, task_node, next_instructions):
+        self.__task_node = task_node
+        self.__next_instructions = next_instructions
+
+    def getOpCode(self):
+        return self.__task_node['type']
+    
+    def getFollowInstructionPointer(self, branch_name="next"):
+        return self.__next_instructions[branch_name][0] or None
+    
+class AILLMWorkflowNode(AIWorkflowNode):
+    
+    def __init__(self, task_node, next_instructions):
+        super.__init__(task_node, next_instructions)
+
+    def getSystemPrompt(self):
+        return self.__task_node['system_prompt']
+    
+    def getQuery(self):
+        return self.__task_node['task_query']
+    
+    def getTaskContextTemplate(self):
+        return self.__task_node['task_context_template']
+    
+    def getTaskAnswerPretextTemplate(self):
+        return self.__task_node['task_answer_pretext']
+
+    def getExtraStopwords(self):
+        return self.__task_node['extra_stopwords'] or []
+
+    def getContext(self, taskRuntimeEnvironment):
+        template_engine = AIPETKTemplateEngine(None)
+        return template_engine.evaluateTemplate(self.getTaskContextTemplate(), taskRuntimeEnvironment)
+
+    def getPretext(self, taskRuntimeEnvironment):
+        template_engine = AIPETKTemplateEngine(None)
+        return template_engine.evaluateTemplate(self.getTaskAnswerPretextTemplate(), taskRuntimeEnvironment)
+    
+    def getModelTask(self, taskRuntimeEnvironment, model_template ):
+        # basically this node should decide, which model and model type, and query type QA/QA withpretext/SimpleQuery/or agent stuff 
+        # may need to be modes later? 
+        task_data = {
+            'system.prompt':self.getSystemPrompt(),
+            'query':self.getQuery(),
+            'context':self.getContext(taskRuntimeEnvironment),
+            'pretext':self.getPretext(taskRuntimeEnvironment),
+            } 
+        
+        template_engine = AIPETKTemplateEngine(None)
+        return template_engine.evaluateTemplate(model_template, task_data)
+        
 
 class AIWorkflow(object):
     '''
@@ -34,6 +87,12 @@ class AIWorkflow(object):
     
     def getTaskNodes(self):
         return self.__task_nodes
+    
+    def getTaskNode(self, instruction_pointer):
+        for task_node in self.__task_nodes:
+            if task_node["taskname"] == instruction_pointer:
+                return task_node
+        return None
     
     def getWorkflowVersion(self):
         return self.__metadata['version']
@@ -65,13 +124,38 @@ class AIWorkflow(object):
     def getStartInstructionPointer(self):
         return self.getExecutionInstructions()['entry']
     
-    def getNextNodeName(self, current_node_name, trasition_name="next"):
+    def getNextNodeName(self, instruction_pointer, trasition_name="next"):
         ## TODO
         ## if there s only one next node, aczally we need to ask the task node whch is the next node, instead of
         ## asking the workflow for the next node.
-        if current_node_name in self.__edgedata["connections"]:
-            return self.__edgedata["connections"][current_node_name][trasition_name][0] or None
+        if instruction_pointer in self.__edgedata["connections"]:
+            return self.__edgedata["connections"][instruction_pointer][trasition_name][0] or None
         return None
+    
+    def getWorkflowNode(self, instruction_pointer) -> AIWorkflowNode:
+        task_node = self.getTaskNode(instruction_pointer)
+        
+        if task_node is None:
+            return None
+        
+        # st.write(instruction_pointer)
+        if instruction_pointer in self.__edgedata['connections']:
+            follow_nodes = self.__edgedata['connections'][instruction_pointer] or {}
+        else:
+            follow_nodes = {}
+        
+        # -----------------------------
+        # TOOD: compile this task_node,
+        # -----------------------------
+        # compiler ... 
+        # just convert this node
+        workflow_node = AIWorkflowNode(task_node, follow_nodes)
+        if workflow_node.getOpCode() != "AITaskTemplate":
+            return workflow_node
+        # recompile node type... as AILLMWorkflowNode        
+        workflow_node = AILLMWorkflowNode(task_node, follow_nodes)
+        
+        return workflow_node
 
     
 def workflowFromJsonFile(workflow_file):
