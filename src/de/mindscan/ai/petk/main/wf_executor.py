@@ -32,7 +32,8 @@ from de.mindscan.ai.petk.llmaccess.lm_connection_endpoints import getConnectionE
 
 from de.mindscan.ai.petk.llmaccess.translate.modeltypes.PhindCodeLama34Bv2 import PhindCodeLama34Bv2
 from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
-from de.mindscan.ai.petk.main.Workflow import workflowFromJsonFile
+from de.mindscan.ai.petk.main.Workflow import workflowFromJsonFile,\
+    AIWorkflowNode, AILLMWorkflowNode
 
 
 def prepareWorkflow(workflow_file):
@@ -79,9 +80,9 @@ def buildModelTaskFromJson(current_node_name, workflow, model_template, taskRunt
 
 # Basic workflow execution extraction
 
-def aivm_execute_instruction_rendertemplate(execution_environment, current_node):
+def aivm_execute_instruction_rendertemplate(execution_environment, workflow_node:AIWorkflowNode):
     template = ""
-    inputs = current_node["inputs"]
+    inputs = workflow_node.getInputMappings()
     for inputconnector in inputs:
         if inputconnector["target"] == "template":
             template = execution_environment[inputconnector["source"]]
@@ -89,7 +90,7 @@ def aivm_execute_instruction_rendertemplate(execution_environment, current_node)
     template_engine = AIPETKTemplateEngine(None)
     rendered = template_engine.evaluateTemplate(template, execution_environment)
     
-    outputs = current_node["outputs"]
+    outputs = workflow_node.getOutputMappings()
     for connector in outputs:
         if connector["source"] == "rendered":
             execution_environment[connector["target"]] = rendered
@@ -97,15 +98,15 @@ def aivm_execute_instruction_rendertemplate(execution_environment, current_node)
     return execution_environment
 
 
-def aivm_execute_instruction_readuploadedfile(execution_environment, current_node, outputs, connector, value):
+def aivm_execute_instruction_readuploadedfile(execution_environment, workflow_node:AIWorkflowNode):
     inputfile = None
-    inputs = current_node["inputs"]
+    inputs = workflow_node.getInputMappings()
     for inputconnector in inputs:
         if inputconnector["target"] == "file":
             inputfile = execution_environment[inputconnector["source"]]
     
     if inputfile is not None:
-        outputs = current_node["outputs"]
+        outputs = workflow_node.getOutputMappings()
         for connector in outputs:
             value = None
             if connector["source"] == "file.name":
@@ -120,15 +121,15 @@ def aivm_execute_instruction_readuploadedfile(execution_environment, current_nod
             
     return execution_environment
 
-def aivm_execute_instruction_boolean(execution_environment, current_node):
+def aivm_execute_instruction_boolean(execution_environment, workflow_node:AIWorkflowNode):
     # from for conversion
     fromValue = None
-    inputs = current_node["inputs"]
+    inputs = workflow_node.getInputMappings()
     for inputconnector in inputs:
         if inputconnector["target"] == "fromValue":
             fromValue = execution_environment[inputconnector["source"]]
     
-    outputs = current_node["outputs"]
+    outputs = workflow_node.getOutputMappings()
     # TODO: toString....
     for connector in outputs:
         if connector["source"] == "true":
@@ -149,42 +150,42 @@ def aivm_execute_instruction_boolean(execution_environment, current_node):
     return execution_environment
 
 
-def aivm_execute_instruction_if(execution_environment, current_node, workflow, current_instruction_pointer):
+def aivm_execute_instruction_if(execution_environment, workflow_node:AIWorkflowNode):
     condition = False
-    inputs = current_node["inputs"]
+    inputs = workflow_node.getInputMappings()
     for inputconnector in inputs:
         if inputconnector["target"] == "condition":
             condition = execution_environment[inputconnector["source"]]
     
     if condition:
-        return workflow.getNextNodeName(current_instruction_pointer, "then")
+        return workflow_node.getFollowInstructionPointer("then")
 
-    return workflow.getNextNodeName(current_instruction_pointer, "else")
+    return workflow_node.getFollowInstructionPointer("else")
 
-def aivm_execute_instruction_nop(execution_environment, current_node):
+def aivm_execute_instruction_nop(execution_environment, workflow_node:AIWorkflowNode):
     return execution_environment
 
 
-def aivm_execute_instruction_assert_fail(execution_environment, current_node):
+def aivm_execute_instruction_assert_fail(execution_environment, workflow_node:AIWorkflowNode):
     st.write("## RESULT: FAIL")
     return execution_environment
 
 
-def aivm_execute_instruction_assert_success(execution_environment, current_node):
+def aivm_execute_instruction_assert_success(execution_environment, workflow_node:AIWorkflowNode):
     st.write("## RESULT: SUCCESS")
     return execution_environment
 
-def aivm_execute_instruction_qa_template(execution_environment, current_node, endpoint, model_task, extra_stopwords):
-    st.write(current_node["short_task_header"])
+def aivm_execute_instruction_qa_template(execution_environment, workflow_node:AILLMWorkflowNode, endpoint, model_task):
+    st.write(workflow_node.getShortTaskHeader())
     st.write("Query")
     st.code(model_task,language="markdown")
     
     invoker = RemoteApiModelInvoker(None)    
     # now execute the model task for a given endpoint and retrieve the answer
     llm_result = invoker.invoke_backend(endpoint, model_task, {
-            "extra_stopwords":extra_stopwords})
+            "extra_stopwords":workflow_node.getExtraStopwords()})
     ## update taskRuntimeEnvironment
-    outputs = current_node["outputs"]
+    outputs = workflow_node.getOutputMappings()
     for connector in outputs:
         if connector["source"] == "local.model_task":
             value = model_task
@@ -200,11 +201,11 @@ def aivm_execute_instruction_qa_template(execution_environment, current_node, en
     return execution_environment
 
 
-def aivm_execute_instruction_array_foreach(execution_environment, current_node, workflow,current_instruction_pointer):
+def aivm_execute_instruction_array_foreach(execution_environment, workflow_node:AIWorkflowNode):
     # TODO we have to process the input, such that we know the array we want to loop over and the variable name to fill...
     # then we need to determine, whether we can loop over it
     # if yes we call someone, who can help us with executing the sub graph
-    body_nodes = workflow.getNextNodeName(current_instruction_pointer, "body")
+    body_nodes = workflow_node.getFollowInstructionPointer("body")
     
     return execution_environment
 
@@ -273,10 +274,10 @@ def executeWorkflow(workflow, log_container):
             #----------------
             if current_op_code == "IF":
                 id_calculate_next_instructionpointer = False
-                current_instruction_pointer = aivm_execute_instruction_if(execution_environment, current_node, workflow, current_instruction_pointer)
+                current_instruction_pointer = aivm_execute_instruction_if(execution_environment, workflow_node)
             elif current_op_code == "ARRAY_FOREACH":
                 id_calculate_next_instructionpointer = True
-                execution_environment = aivm_execute_instruction_array_foreach(execution_environment, current_node, workflow, current_instruction_pointer)
+                execution_environment = aivm_execute_instruction_array_foreach(execution_environment, workflow_node)
             elif current_op_code == "CONTINUE":
                 # CONTINUE - instruct a for-loop to continue or end
                 # ** basically we must not calculate the next instruction
@@ -298,12 +299,12 @@ def executeWorkflow(workflow, log_container):
             elif current_op_code == "ASSERT_FAIL":
                 id_break_on_instruction = True
                 id_calculate_next_instructionpointer = False
-                execution_environment = aivm_execute_instruction_assert_fail(execution_environment, current_node)
+                execution_environment = aivm_execute_instruction_assert_fail(execution_environment, workflow_node)
 
             elif current_op_code == "ASSERT_SUCCESS":
                 id_break_on_instruction = True
                 id_calculate_next_instructionpointer = False
-                execution_environment = aivm_execute_instruction_assert_success(execution_environment, current_node)
+                execution_environment = aivm_execute_instruction_assert_success(execution_environment, workflow_node)
                 
             
             # --------------------
@@ -311,10 +312,10 @@ def executeWorkflow(workflow, log_container):
             # --------------------
             # NOP
             elif current_op_code == "NOP":
-                execution_environment = aivm_execute_instruction_nop(execution_environment, current_node)
+                execution_environment = aivm_execute_instruction_nop(execution_environment, workflow_node)
             # BOOLEAN Primitive
             elif current_op_code == "BOOLEAN":
-                execution_environment = aivm_execute_instruction_boolean(execution_environment, current_node)
+                execution_environment = aivm_execute_instruction_boolean(execution_environment, workflow_node)
                 
             # ---
             # INVOKE_WORKFLOW - invoke other work flow
@@ -334,11 +335,11 @@ def executeWorkflow(workflow, log_container):
             elif current_op_code == "AITaskTemplate":
                 # TODO create the real 
                 # maybe shift the building the QA node into the qs_templae execute instruction qa template
-                execution_environment = aivm_execute_instruction_qa_template(execution_environment, current_node, endpoint, model_task, extra_stopwords)
+                execution_environment = aivm_execute_instruction_qa_template(execution_environment, workflow_node, endpoint, model_task)
             elif current_op_code == "ReadUploadedFile":
-                execution_environment = aivm_execute_instruction_readuploadedfile(execution_environment, current_node)
+                execution_environment = aivm_execute_instruction_readuploadedfile(execution_environment, workflow_node)
             elif current_op_code == "RenderTemplate":
-                execution_environment = aivm_execute_instruction_rendertemplate(execution_environment, current_node)
+                execution_environment = aivm_execute_instruction_rendertemplate(execution_environment, workflow_node)
             else:
                 pass
             
@@ -357,7 +358,7 @@ def executeWorkflow(workflow, log_container):
             if id_calculate_next_instructionpointer:
                 # DEPENDING on the decoded Instruction type, we need to encode whether to determine the next Node
                 # this should be "currentnode.getNextInstructionPointer()" oder so
-                current_instruction_pointer = workflow.getNextNodeName(current_instruction_pointer,"next")
+                current_instruction_pointer = workflow_node.getFollowInstructionPointer("next")
         
         # Now do process the output nodes
         

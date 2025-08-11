@@ -14,6 +14,7 @@ AI_TASK_DESCRIPTOR_KEY_EDGEDATA = "edgedata"
 AI_TASK_DESCRIPTOR_KEY_DATADICTIONARY = "json_data_dictionary"
 
 class AIWorkflowNode(object):
+    
     def __init__(self, task_node, next_instructions):
         self.__task_node = task_node
         self.__next_instructions = next_instructions
@@ -23,6 +24,18 @@ class AIWorkflowNode(object):
     
     def getFollowInstructionPointer(self, branch_name="next"):
         return self.__next_instructions[branch_name][0] or None
+    
+    def getInputMappings(self):
+        return self.__task_node['inputs']
+    
+    def getOutputMappings(self):
+        return self.__task_node['outputs']
+    
+    def getShortTaskHeader(self):
+        return self.__task_node['short_task_header'] or ""
+    
+    def getVersion(self):
+        return self.__task_node['version'] or "0.0.0"
     
 class AILLMWorkflowNode(AIWorkflowNode):
     
@@ -43,7 +56,7 @@ class AILLMWorkflowNode(AIWorkflowNode):
 
     def getExtraStopwords(self):
         return self.__task_node['extra_stopwords'] or []
-
+    
     def getContext(self, taskRuntimeEnvironment):
         template_engine = AIPETKTemplateEngine(None)
         return template_engine.evaluateTemplate(self.getTaskContextTemplate(), taskRuntimeEnvironment)
