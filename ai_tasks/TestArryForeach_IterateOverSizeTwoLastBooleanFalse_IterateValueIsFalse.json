@@ -1,0 +1,87 @@
+{
+	"__metadata": {
+		"name":"TestArryForeach_IterateOverSizeTwoLastBooleanFalse_IterateValueIsFalse",
+		"short_description":"### Unittest for foreach Loop Nodes",
+		"version":"1.0.0",
+		"__description":"this is a unit test performing an if operation" 
+	},
+	
+	"execute": {
+		"entry":"nodeToTest",
+		"inputfields": {
+		}
+	},
+	
+	"nodedata":{
+		"nodes": [
+			{
+				"taskname":"nodeToTest",
+				"short_task_header":"",
+				"version":"1.0.0",
+				"type":"ARRAY_FOREACH",
+				"inputs":[
+					{
+						"target":"iterateOver",
+						"source":"twoValuesArray",
+						"__datatype":"array"
+					},
+					{
+						"target":"iterateVarname",
+						"source":"iteratorValueVarname",
+						"__datatype":"boolean"
+					}
+				],
+				"outputs":[]
+			},
+			{
+				"taskname":"nodeLoopValueTester",
+				"short_task_header":"",
+				"version":"1.0.0",
+				"type":"IF",
+				"inputs":[
+					{
+						"target":"condition",
+						"source":"iteratorValue",
+						"__datatype":"boolean"
+					}
+				],
+				"outputs":[]
+			},
+			{
+				"taskname":"assertSUCCESS",
+				"short_task_header":"",
+				"version":"1.0.0",
+				"type":"ASSERT_SUCCESS",
+				"inputs":[],
+				"outputs":[]
+			},
+			{
+				"taskname":"assertFAIL",
+				"short_task_header":"",
+				"version":"1.0.0",
+				"type":"ASSERT_FAIL",
+				"inputs":[],
+				"outputs":[]
+			}
+		]
+	},
+	
+	"edgedata": {
+		"connections":{
+			"nodeToTest":{
+				"body":[],
+				"next":["nodeLoopValueTester"]
+			},
+			"nodeLoopValueTester":{
+				"then":["assertFAIL"],
+				"else":["assertSUCCESS"]
+			}
+		}
+	},
+	
+	"json_data_dictionary":{
+		"twoValuesArray":[true,false],
+		"iteratorValueVarname":"iteratorValue"
+	}
+	
+}
