@@ -1,6 +1,6 @@
 {
 	"__metadata": {
-		"name":"TestArryForeach_IterateOverSizeTwoLastBooleanFalse_IterateValueIsFalse",
+		"name":"TestArrayForeach_IterateOverSizeTwoLastBooleanFalse_IterateValueIsFalse",
 		"short_description":"### Unittest for foreach Loop Nodes",
 		"version":"1.0.0",
 		"__description":"this is a unit test performing an if operation" 
