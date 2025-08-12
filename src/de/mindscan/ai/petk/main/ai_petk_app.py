@@ -323,6 +323,7 @@ render_tasktype_map = {
     'IF': render_if_primitive,
     'ASSERT_FAIL': render_assertfail_primitive,
     'ASSERT_SUCCESS': render_assertsuccess_primitive,
+    'ARRAY_FOREACH': render_unknowntype_task,
     'default': render_unknowntype_task
     }
 
@@ -341,6 +342,8 @@ def render_current_task_node(current_task_tab, current_task_node):
                 st.markdown("***" + output['source']+'*** [' +output['__datatype'] + ' ] ===> ***'+output['target']+'***')
             
         render_tasktype_map[current_task_node['type']](current_task_node)
+        
+        
 def render_workflow_tab(tab):
     with tab:
         workflows = collect_workflows()

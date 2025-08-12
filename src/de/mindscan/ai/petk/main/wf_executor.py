@@ -205,7 +205,23 @@ def aivm_execute_instruction_array_foreach(execution_environment, workflow_node:
     # TODO we have to process the input, such that we know the array we want to loop over and the variable name to fill...
     # then we need to determine, whether we can loop over it
     # if yes we call someone, who can help us with executing the sub graph
-    body_nodes = workflow_node.getFollowInstructionPointer("body")
+    body_entry_node = workflow_node.getFollowInstructionPointer("body")
+    
+    inputs = workflow_node.getInputMappings()
+    for inputconnector in inputs:
+        if inputconnector["target"] == "iterateOver":
+            iterate_on = execution_environment[inputconnector["source"]]
+        if inputconnector["target"] == "iterateVarname":
+            iterate_varname = execution_environment[inputconnector["source"]]
+    
+    if iterate_on:
+        for value in iterate_on:
+            execution_environment[iterate_varname] = value
+            pass
+     
+    
+    if body_entry_node == None:
+        return execution_environment
     
     return execution_environment
 
@@ -231,6 +247,7 @@ def executeWorkflow(workflow, log_container):
         current_instruction_pointer = workflow.getStartInstructionPointer()
         
         while current_instruction_pointer is not None:
+            # TODO. finally refactor this...
             model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_instruction_pointer, workflow,  model_template, execution_environment)
             
             # 
@@ -279,12 +296,14 @@ def executeWorkflow(workflow, log_container):
                 id_calculate_next_instructionpointer = True
                 execution_environment = aivm_execute_instruction_array_foreach(execution_environment, workflow_node)
             elif current_op_code == "CONTINUE":
+                id_endloop_as_continue = True
                 # CONTINUE - instruct a for-loop to continue or end
                 # ** basically we must not calculate the next instruction
                 # ** we must break the current loop, we must indicate, that a continue occurred, this will be determiend by the caller, how to handle this
                 # ** locally we don't know what to do further, only the one who executes the foreach node, knows
                 pass
             elif current_op_code == "BREAK":
+                id_endloop_as_break = True
                 # BREAK - instruct a for loop to end the for loop
                 # ** basically we must not calculate the next instruction
                 # ** we must break the current loop, we must indicate, that a break occurred, this will be determined by the caller, how to handle this
@@ -349,6 +368,14 @@ def executeWorkflow(workflow, log_container):
             # ------------
             # UPDATE AI-VM
             # ------------ 
+            
+            
+            # We must stoplooping.
+            if id_endloop_as_break or id_endloop_as_continue:
+                # TODO: we should probably just return from here
+                # and indicate that 
+                break
+ 
             
             # Do we need to stop?
             if id_break_on_instruction:

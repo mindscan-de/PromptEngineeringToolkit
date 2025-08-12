@@ -23,6 +23,12 @@ class AIWorkflowNode(object):
         return self.__task_node['type']
     
     def getFollowInstructionPointer(self, branch_name="next"):
+        if branch_name not in self.__next_instructions:
+            return None
+    
+        if len(self.__next_instructions[branch_name]) == 0:
+            return None
+        
         return self.__next_instructions[branch_name][0] or None
     
     def getInputMappings(self):
