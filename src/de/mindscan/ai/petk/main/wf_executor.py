@@ -40,45 +40,7 @@ def prepareWorkflow(workflow_file):
     return workflowFromJsonFile(workflow_file)
 
 
-
-def buildModelTaskFromJson(current_node_name, workflow, model_template, taskRuntimeEnvironment):
-    task_nodes = workflow.getTaskNodes()
-    
-    current_node = None
-    for task_node in task_nodes:
-        if task_node["taskname"] == current_node_name:
-            current_node = task_node
-    
-    if current_node is None:
-        return "",[]
-    
-    if current_node["type"] != "AITaskTemplate":
-        return "",[],current_node
-        
-    
-    system_prompt = current_node["system_prompt"]
-    query = current_node["task_query"]
-    context_template = current_node["task_context_template"]
-    pretext_template = current_node["task_answer_pretext"]
-    extra_stopwords = current_node["extra_stopwords"] or []
-    
-    template_engine = AIPETKTemplateEngine(None)
-    context = template_engine.evaluateTemplate(context_template, taskRuntimeEnvironment)
-    pretext = template_engine.evaluateTemplate(pretext_template, taskRuntimeEnvironment)
-    
-    task_data = {
-        'system.prompt':system_prompt,
-        'query':query,
-        'context':context,
-        'pretext':pretext,
-        } 
-
-    model_task = template_engine.evaluateTemplate(model_template, task_data)
-
-    return model_task, extra_stopwords, current_node
-
-
-# Basic workflow execution extraction
+# Basic workflow execution methods - should be table driven in the future
 
 def aivm_execute_instruction_rendertemplate(execution_environment, workflow_node:AIWorkflowNode):
     template = ""
@@ -176,8 +138,8 @@ def aivm_execute_instruction_assert_success(execution_environment, workflow_node
     return execution_environment
 
 def aivm_execute_instruction_qa_template(execution_environment, workflow_node:AILLMWorkflowNode):
+    ## TODO: well idon't like it, but anyways this must be encapsulated here.
     endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
-
     # the mdoel and or the compatible mdoel should be calculated somewhere.
     model = PhindCodeLama34Bv2(None)
     
@@ -185,7 +147,6 @@ def aivm_execute_instruction_qa_template(execution_environment, workflow_node:AI
     # we must build the model_task here, not getting it injected
     # basically this should be selected because of some properties of the workflow_node
     model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
-
     model_task = workflow_node.getModelTask(execution_environment, model_template)
     
     st.write(workflow_node.getShortTaskHeader())
@@ -263,13 +224,11 @@ def executeWorkflow(workflow, log_container):
             # instead of the next code, we only need to execute the workflow_node, some of them are statefule, and some aren't
             # workflow_executor.execute(worflow_node, execution_environment)
             
-            
             # there are conditional nodes, which will change the outcome, where to continue next
             # there should be a for / foreach nodes, which should handle 
             # call/return
             # goto / contunie / break
             # a for wil be a separate call stack for more simplicity in the call stack.
-            
             
             current_op_code = workflow_node.getOpCode()
             st.write("current Node Type : "+current_op_code ) 
