@@ -174,7 +174,7 @@ def aivm_execute_instruction_qa_template(execution_environment, workflow_node:AI
     return execution_environment
 
 
-def aivm_execute_instruction_array_foreach(execution_environment, workflow_node:AIWorkflowNode):
+def aivm_execute_instruction_array_foreach(execution_environment, workflow_node:AIWorkflowNode, workflow, log_container):
     # TODO we have to process the input, such that we know the array we want to loop over and the variable name to fill...
     # then we need to determine, whether we can loop over it
     # if yes we call someone, who can help us with executing the sub graph
@@ -188,19 +188,29 @@ def aivm_execute_instruction_array_foreach(execution_environment, workflow_node:
             iterate_on = execution_environment[inputconnector["source"]]
         if inputconnector["target"] == "iterateVarname":
             iterate_varname = execution_environment[inputconnector["source"]]
-    
+
     if iterate_on and iterate_varname:
         for value in iterate_on:
             execution_environment[iterate_varname] = value
             
             # TODO invoke_graph(body_entry_node)
             # TODO actually the first node of ther for loop should be the assignment to the value instead of here....
+            if body_entry_node is not None:
+                loopresult, execution_environment, last_executed_node = executeSubGraph(workflow, execution_environment, body_entry_node, log_container)
             
-            pass
+                if loopresult == EXECUTE_RESULT_CONTINUE:
+                    continue
+                if loopresult == EXECUTE_RESULT_BREAK:
+                    break
+                if loopresult == EXECUTE_RESULT_ASSERT_FAIL or loopresult == EXECUTE_RESULT_ASSERT_SUCCESS:
+                    # TODO: handle and pass this result to the invoker
+                    return execution_environment
+                 
+            continue
      
-    
     if body_entry_node == None:
         return execution_environment
+    
     
     return execution_environment
 
@@ -259,7 +269,9 @@ def executeSubGraph(workflow, execution_environment, entry_instruction_pointer, 
                 current_instruction_pointer = aivm_execute_instruction_if(execution_environment, workflow_node)
             elif current_op_code == "ARRAY_FOREACH":
                 id_calculate_next_instructionpointer = True
-                execution_environment = aivm_execute_instruction_array_foreach(execution_environment, workflow_node)
+                execution_environment = aivm_execute_instruction_array_foreach(execution_environment, workflow_node, workflow, log_container)
+                # TODO: depending whether we have a ASSERT COndition, then we must stop the execution
+                
             elif current_op_code == "CONTINUE":
                 id_endloop_as_continue = True
                 # CONTINUE - instruct a for-loop to continue or end
