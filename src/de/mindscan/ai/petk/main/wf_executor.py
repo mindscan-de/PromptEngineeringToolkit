@@ -175,7 +175,19 @@ def aivm_execute_instruction_assert_success(execution_environment, workflow_node
     st.write("## RESULT: SUCCESS")
     return execution_environment
 
-def aivm_execute_instruction_qa_template(execution_environment, workflow_node:AILLMWorkflowNode, endpoint, model_task):
+def aivm_execute_instruction_qa_template(execution_environment, workflow_node:AILLMWorkflowNode):
+    endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
+
+    # the mdoel and or the compatible mdoel should be calculated somewhere.
+    model = PhindCodeLama34Bv2(None)
+    
+    # because this is a QA Template task, 
+    # we must build the model_task here, not getting it injected
+    # basically this should be selected because of some properties of the workflow_node
+    model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
+
+    model_task = workflow_node.getModelTask(execution_environment, model_template)
+    
     st.write(workflow_node.getShortTaskHeader())
     st.write("Query")
     st.code(model_task,language="markdown")
@@ -206,6 +218,8 @@ def aivm_execute_instruction_array_foreach(execution_environment, workflow_node:
     # then we need to determine, whether we can loop over it
     # if yes we call someone, who can help us with executing the sub graph
     body_entry_node = workflow_node.getFollowInstructionPointer("body")
+    iterate_on = None
+    iterate_varname = None
     
     inputs = workflow_node.getInputMappings()
     for inputconnector in inputs:
@@ -214,9 +228,13 @@ def aivm_execute_instruction_array_foreach(execution_environment, workflow_node:
         if inputconnector["target"] == "iterateVarname":
             iterate_varname = execution_environment[inputconnector["source"]]
     
-    if iterate_on:
+    if iterate_on and iterate_varname:
         for value in iterate_on:
             execution_environment[iterate_varname] = value
+            
+            # TODO invoke_graph(body_entry_node)
+            # TODO actually the first node of ther for loop should be the assignment to the value instead of here....
+            
             pass
      
     
@@ -235,23 +253,13 @@ def executeWorkflow(workflow, log_container):
         st.write("should have run it")
         st.write(execution_environment)
         ## now execute the graph....
-        
-        endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
-        
-        # 1st step, first shot translation to japanese
-        # let's assume we have this phing codelama model
-        model = PhindCodeLama34Bv2(None)
-        model_template = model.get_unstructured_prompt_template_with_context_and_pretext()
-        
+
         ## TODO iterate, while the state exists, of the current name is not None
         current_instruction_pointer = workflow.getStartInstructionPointer()
         
         while current_instruction_pointer is not None:
-            # TODO. finally refactor this...
-            model_task, extra_stopwords, current_node = buildModelTaskFromJson(current_instruction_pointer, workflow,  model_template, execution_environment)
-            
-            # 
             workflow_node = workflow.getWorkflowNode(current_instruction_pointer)
+            
             # instead of the next code, we only need to execute the workflow_node, some of them are statefule, and some aren't
             # workflow_executor.execute(worflow_node, execution_environment)
             
@@ -352,9 +360,7 @@ def executeWorkflow(workflow, log_container):
             
             
             elif current_op_code == "AITaskTemplate":
-                # TODO create the real 
-                # maybe shift the building the QA node into the qs_templae execute instruction qa template
-                execution_environment = aivm_execute_instruction_qa_template(execution_environment, workflow_node, endpoint, model_task)
+                execution_environment = aivm_execute_instruction_qa_template(execution_environment, workflow_node)
             elif current_op_code == "ReadUploadedFile":
                 execution_environment = aivm_execute_instruction_readuploadedfile(execution_environment, workflow_node)
             elif current_op_code == "RenderTemplate":
