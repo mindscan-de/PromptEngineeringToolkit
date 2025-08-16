@@ -204,20 +204,18 @@ def aivm_execute_instruction_array_foreach(execution_environment, workflow_node:
     
     return execution_environment
 
+EXECUTE_RESULT_END_OF_GRAPH = 0
+EXECUTE_RESULT_BREAK = 1
+EXECUTE_RESULT_CONTINUE = 2
+EXECUTE_RESULT_RETURN = 3
+EXECUTE_RESULT_ASSERT_FAIL = 128
+EXECUTE_RESULT_ASSERT_SUCCESS = 129
 
-def executeWorkflow(workflow, log_container):
-    # TODO: 
-    execution_environment = workflow.getExecutionEnvironment()
-    
+# TODO introduce return codes
+def executeSubGraph(workflow, execution_environment, entry_instruction_pointer, log_container):
+    current_instruction_pointer = entry_instruction_pointer
+
     with log_container:
-        st.write("### Workflow Log Container")
-        st.write("should have run it")
-        st.write(execution_environment)
-        ## now execute the graph....
-
-        ## TODO iterate, while the state exists, of the current name is not None
-        current_instruction_pointer = workflow.getStartInstructionPointer()
-        
         while current_instruction_pointer is not None:
             workflow_node = workflow.getWorkflowNode(current_instruction_pointer)
             
@@ -339,11 +337,19 @@ def executeWorkflow(workflow, log_container):
             if id_endloop_as_break or id_endloop_as_continue:
                 # TODO: we should probably just return from here
                 # and indicate that 
-                break
+                if id_endloop_as_break:
+                    return (EXECUTE_RESULT_BREAK, execution_environment, workflow_node )
+                if id_endloop_as_continue:
+                    return (EXECUTE_RESULT_CONTINUE, execution_environment, workflow_node )
  
             
             # Do we need to stop?
             if id_break_on_instruction:
+                if current_op_code == "ASSERT_FAIL":
+                    return (EXECUTE_RESULT_ASSERT_FAIL, execution_environment, workflow_node )
+                if current_op_code == "ASSERT_SUCCESS":
+                    return (EXECUTE_RESULT_ASSERT_SUCCESS, execution_environment, workflow_node )
+                
                 break
             
             # Do we need to calculate the next instruction pointer?
@@ -351,11 +357,29 @@ def executeWorkflow(workflow, log_container):
                 # DEPENDING on the decoded Instruction type, we need to encode whether to determine the next Node
                 # this should be "currentnode.getNextInstructionPointer()" oder so
                 current_instruction_pointer = workflow_node.getFollowInstructionPointer("next")
+
+            continue
+
+        return (EXECUTE_RESULT_END_OF_GRAPH, execution_environment, workflow_node)
+
+def executeWorkflow(workflow, log_container):
+    # TODO: 
+    execution_environment = workflow.getExecutionEnvironment()
+    
+    with log_container:
+        st.write("### Workflow Log Container")
+        st.write("should have run it")
+        st.write(execution_environment)
+    
+    # TODO return the updated execution environment
+    # TODO handle workflow codes
+    result, execution_environment, last_workflow_node = executeSubGraph(workflow, execution_environment, workflow.getStartInstructionPointer(), log_container)
+    
+    # TODO: maybe we have to consider to update according to the workflow, such that we can invoke workflows from workflows. 
         
-        # Now do process the output nodes
-        
+    with log_container:        
         st.write("Final Value for the execution environment:")
         st.write(execution_environment,language="json")        
         
-        pass
+    pass
 
