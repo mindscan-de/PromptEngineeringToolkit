@@ -10,7 +10,7 @@
     "return_full_text": false,
     "seed": null,
     "stop": [
-        "photographer"
+        "photographer" {{{#appendAsJsonString:extra_stopwords}}}
     ],
     "temperature": 0.2,
     "top_k": 10,
