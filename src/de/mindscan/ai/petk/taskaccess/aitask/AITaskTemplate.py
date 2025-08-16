@@ -4,17 +4,18 @@ Created on 26.11.2024
 @author: JohnDoe
 '''
 
+# maybe obsolete - i dont use hard coded templates any more, because they were just a proof of concept at the start of this project.
 class AITaskTemplate(object):
     '''
     classdocs
     '''
 
 
-    def __init__(self, name, model_compatibility, system_prompt, task_query, task_context_template,task_answer_pretext_template=""):
+    def __init__(self, name, model_compatibility, system_prompt, task_query, task_context_template, task_answer_pretext_template=""):
         '''
         Constructor
         '''
-        self.__template_name= name
+        self.__template_name = name
         self.__model_compatibility = model_compatibility
         self.__systemprompt = system_prompt
         self.__task_query = task_query
