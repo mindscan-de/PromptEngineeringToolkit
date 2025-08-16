@@ -208,7 +208,6 @@ def aivm_execute_instruction_array_foreach(execution_environment, workflow_node:
                 loopresult, execution_environment, last_executed_node = executeSubGraph(workflow, execution_environment, body_entry_node, log_container)
             
                 if loopresult == EXECUTE_RESULT_ASSERT_FAIL or loopresult == EXECUTE_RESULT_ASSERT_SUCCESS:
-                    # TODO: handle and pass this result to the invoker
                     return (loopresult, execution_environment, last_executed_node)
                 if loopresult == EXECUTE_RESULT_CONTINUE:
                     continue
@@ -390,7 +389,7 @@ def executeWorkflow(workflow, log_container):
         st.write(execution_environment)
     
     # TODO return the updated execution environment
-    # TODO handle workflow codes
+    # TODO handle workflow return codes - e.g. asserts, so that we can execute 
     result, execution_environment, last_workflow_node = executeSubGraph(workflow, execution_environment, workflow.getStartInstructionPointer(), log_container)
     
     # TODO: maybe we have to consider to update according to the workflow, such that we can invoke workflows from workflows. 
