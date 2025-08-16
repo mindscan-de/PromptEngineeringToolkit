@@ -36,6 +36,15 @@ from de.mindscan.ai.petk.main.Workflow import workflowFromJsonFile,\
     AIWorkflowNode, AILLMWorkflowNode
 
 
+EXECUTE_RESULT_END_OF_GRAPH = 0
+EXECUTE_RESULT_BREAK = 1
+EXECUTE_RESULT_CONTINUE = 2
+EXECUTE_RESULT_RETURN = 3
+EXECUTE_RESULT_ASSERT_FAIL = 128
+EXECUTE_RESULT_ASSERT_SUCCESS = 129
+
+
+
 def prepareWorkflow(workflow_file):
     return workflowFromJsonFile(workflow_file)
 
@@ -198,28 +207,22 @@ def aivm_execute_instruction_array_foreach(execution_environment, workflow_node:
             if body_entry_node is not None:
                 loopresult, execution_environment, last_executed_node = executeSubGraph(workflow, execution_environment, body_entry_node, log_container)
             
+                if loopresult == EXECUTE_RESULT_ASSERT_FAIL or loopresult == EXECUTE_RESULT_ASSERT_SUCCESS:
+                    # TODO: handle and pass this result to the invoker
+                    return (loopresult, execution_environment, last_executed_node)
                 if loopresult == EXECUTE_RESULT_CONTINUE:
                     continue
                 if loopresult == EXECUTE_RESULT_BREAK:
                     break
-                if loopresult == EXECUTE_RESULT_ASSERT_FAIL or loopresult == EXECUTE_RESULT_ASSERT_SUCCESS:
-                    # TODO: handle and pass this result to the invoker
-                    return execution_environment
                  
             continue
      
     if body_entry_node == None:
-        return execution_environment
+        return (EXECUTE_RESULT_END_OF_GRAPH, execution_environment, workflow_node)
     
     
-    return execution_environment
+    return (EXECUTE_RESULT_END_OF_GRAPH, execution_environment, workflow_node)
 
-EXECUTE_RESULT_END_OF_GRAPH = 0
-EXECUTE_RESULT_BREAK = 1
-EXECUTE_RESULT_CONTINUE = 2
-EXECUTE_RESULT_RETURN = 3
-EXECUTE_RESULT_ASSERT_FAIL = 128
-EXECUTE_RESULT_ASSERT_SUCCESS = 129
 
 # TODO introduce return codes
 def executeSubGraph(workflow, execution_environment, entry_instruction_pointer, log_container):
@@ -269,8 +272,11 @@ def executeSubGraph(workflow, execution_environment, entry_instruction_pointer, 
                 current_instruction_pointer = aivm_execute_instruction_if(execution_environment, workflow_node)
             elif current_op_code == "ARRAY_FOREACH":
                 id_calculate_next_instructionpointer = True
-                execution_environment = aivm_execute_instruction_array_foreach(execution_environment, workflow_node, workflow, log_container)
-                # TODO: depending whether we have a ASSERT COndition, then we must stop the execution
+                result, execution_environment, latestnode = aivm_execute_instruction_array_foreach(execution_environment, workflow_node, workflow, log_container)
+
+                # depending whether we have a ASSERT COndition, then we must stop the execution
+                if result == EXECUTE_RESULT_ASSERT_FAIL or result == EXECUTE_RESULT_ASSERT_SUCCESS:
+                    return (result, execution_environment, latestnode)
                 
             elif current_op_code == "CONTINUE":
                 id_endloop_as_continue = True
