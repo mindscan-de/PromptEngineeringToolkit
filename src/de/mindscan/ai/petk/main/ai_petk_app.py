@@ -45,6 +45,7 @@ st.markdown("""<style>textarea { font-family:Courier New important!; } </style>"
 # WE do want to initialize the UI if session is not properly initialized 
 
 ai_task_directory = "../../../../../../ai_tasks"
+ai_task_test_directory = "../../../../../../ai_tasks/tests"
 endpointname = "bigserverOobaboogaEndpoint"
 
 ## ----------------------------
@@ -268,8 +269,9 @@ def render_prompt_engineer_tab(tab):
 ## ----------------------------
 ## Workflow and Agents Tabs
 ## ----------------------------
-def collect_workflows():
-    directory = ai_task_directory
+def collect_workflows(directory = None):
+    if directory is None:
+        directory = ai_task_directory
     return [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f)) and f.endswith(".json")]
 
 def render_ai_template_task(current_task_node):
@@ -572,7 +574,7 @@ def render_unittest_runner_tab(tab):
     with tab:
         # TODO find all tests, and display them in a select box
         # TODO provide an execution Button for the test.
-        workflows = collect_workflows()
+        workflows = collect_workflows(ai_task_test_directory)
         test_workflows = [ workflow for workflow in workflows if workflow.startswith("Test")]
         test_workflows.sort()
         test_selection_column, test_result_column = st.columns([40,60])
@@ -588,7 +590,7 @@ def render_unittest_runner_tab(tab):
             
         with test_result_column:
             if run_test:
-                test_workflow_file = os.path.join(ai_task_directory, selected_test)
+                test_workflow_file = os.path.join(ai_task_test_directory, selected_test)
                 test_workflow = prepareWorkflow(test_workflow_file)
                 executeWorkflow(test_workflow, test_result_column)
             else:
