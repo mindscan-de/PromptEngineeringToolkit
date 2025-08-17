@@ -152,9 +152,9 @@ def aivm_execute_instruction_assert_success(execution_environment, workflow_node
     return execution_environment
 
 def aivm_execute_instruction_qa_template(execution_environment, workflow_node:AILLMWorkflowNode):
-    ## TODO: well idon't like it, but anyways this must be encapsulated here.
+    ## TODO: well idon't like it, but anyways this must be encapsulated somewhere.
     endpoint = getConnectionEndpoints()['bigserverOobaboogaEndpoint']
-    # the mdoel and or the compatible mdoel should be calculated somewhere.
+    # the mdoel and or the compatible model should be calculated somewhere.
     model = PhindCodeLama34Bv2(None)
     
     # because this is a QA Template task, 
@@ -207,8 +207,6 @@ def aivm_execute_instruction_array_foreach(execution_environment, workflow_node:
         for value in iterate_on:
             execution_environment[iterate_varname] = value
             
-            # TODO invoke_graph(body_entry_node)
-            # TODO actually the first node of ther for loop should be the assignment to the value instead of here....
             if body_entry_node is not None:
                 loopresult, execution_environment, last_executed_node = executeSubGraph(workflow, execution_environment, body_entry_node, log_container)
             
@@ -355,7 +353,7 @@ def executeSubGraph(workflow, execution_environment, entry_instruction_pointer, 
             # ------------ 
             
             
-            # We must stoplooping.
+            # We must stop looping.
             if id_endloop_as_break or id_endloop_as_continue:
                 # TODO: we should probably just return from here
                 # and indicate that 
@@ -411,7 +409,7 @@ def executeTest(workflow, log_container):
     
     if result == EXECUTE_RESULT_ASSERT_SUCCESS:
         with log_container:
-            st.write("* Test **"+workflow.getWorkflowKey()+"** - :green[pass]")
+            st.write("* Test **"+workflow.getWorkflowKey()+"** - :blue[pass]")
         pass
     elif result == EXECUTE_RESULT_ASSERT_FAIL:
         with log_container:
