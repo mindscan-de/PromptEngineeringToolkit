@@ -50,6 +50,11 @@ def prepareWorkflow(workflow_file):
 
 
 # Basic workflow execution methods - should be table driven in the future
+# Also this compute model might ot be the best for arithmetic operations assignments and such. 
+# The Calculation model should be something like a normal stack machine. This here is just 
+# another proof of concept, because some time into the future, this system should be programmable
+# as any other language. 
+
 
 def aivm_execute_instruction_rendertemplate(execution_environment, workflow_node:AIWorkflowNode):
     template = ""
@@ -138,12 +143,12 @@ def aivm_execute_instruction_nop(execution_environment, workflow_node:AIWorkflow
 
 
 def aivm_execute_instruction_assert_fail(execution_environment, workflow_node:AIWorkflowNode):
-    st.write("## RESULT: FAIL")
+    # st.write("## RESULT: FAIL")
     return execution_environment
 
 
 def aivm_execute_instruction_assert_success(execution_environment, workflow_node:AIWorkflowNode):
-    st.write("## RESULT: SUCCESS")
+    # st.write("## RESULT: SUCCESS")
     return execution_environment
 
 def aivm_execute_instruction_qa_template(execution_environment, workflow_node:AILLMWorkflowNode):
@@ -342,8 +347,8 @@ def executeSubGraph(workflow, execution_environment, entry_instruction_pointer, 
             else:
                 pass
             
-            st.write("updated environment")
-            st.code(execution_environment, language="json")
+            # st.write("updated environment")
+            # st.code(execution_environment, language="json")
 
             # ------------
             # UPDATE AI-VM
@@ -380,7 +385,6 @@ def executeSubGraph(workflow, execution_environment, entry_instruction_pointer, 
         return (EXECUTE_RESULT_END_OF_GRAPH, execution_environment, workflow_node)
 
 def executeWorkflow(workflow, log_container):
-    # TODO: 
     execution_environment = workflow.getExecutionEnvironment()
     
     with log_container:
@@ -394,9 +398,30 @@ def executeWorkflow(workflow, log_container):
     
     # TODO: maybe we have to consider to update according to the workflow, such that we can invoke workflows from workflows. 
         
-    with log_container:        
+    with log_container:
         st.write("Final Value for the execution environment:")
-        st.write(execution_environment,language="json")        
+        st.write(execution_environment)        
         
     pass
 
+def executeTest(workflow, log_container):
+    execution_environment = workflow.getExecutionEnvironment()
+    
+    result, execution_environment, last_workflow_node = executeSubGraph(workflow, execution_environment, workflow.getStartInstructionPointer(), st.empty())
+    
+    if result == EXECUTE_RESULT_ASSERT_SUCCESS:
+        with log_container:
+            st.write("* Test **"+workflow.getWorkflowKey()+"** - :green[pass]")
+        pass
+    elif result == EXECUTE_RESULT_ASSERT_FAIL:
+        with log_container:
+            st.write("* Test {{"+workflow.getWorkflowKey()+"}} - **:red[fail]**")
+            # st.write(test_container)
+        pass
+    
+    with log_container:
+        # st.write("Final Value for the execution environment:")
+        # st.write(execution_environment)
+        pass        
+    
+    return result

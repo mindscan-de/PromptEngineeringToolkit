@@ -37,7 +37,8 @@ from de.mindscan.ai.petk.llmaccess.transport.RemoteApiModelInvoker import Remote
 from de.mindscan.ai.petk.llmaccess.lm_modeltypes import get_ModelTypes
 from de.mindscan.ai.petk.taskaccess.aitask.ai_tasktemplates import get_ai_task_tasktemplates
 from de.mindscan.ai.petk.templateegine.AIPETKTemplateEngine import AIPETKTemplateEngine
-from de.mindscan.ai.petk.main.wf_executor import prepareWorkflow, executeWorkflow
+from de.mindscan.ai.petk.main.wf_executor import prepareWorkflow, executeWorkflow,\
+    executeTest, EXECUTE_RESULT_ASSERT_FAIL, EXECUTE_RESULT_ASSERT_SUCCESS
 
 # Set the wide mode and application name
 st.set_page_config(layout="wide", page_title="Prompt-Engineering-Toolkit")
@@ -587,12 +588,32 @@ def render_unittest_runner_tab(tab):
         
         with test_selection_column:
             run_test = st.button("Run test")
-            
+            run_all_tests = st.button("Run all tests")
+        
         with test_result_column:
             if run_test:
                 test_workflow_file = os.path.join(ai_task_test_directory, selected_test)
                 test_workflow = prepareWorkflow(test_workflow_file)
                 executeWorkflow(test_workflow, test_result_column)
+                
+            elif run_all_tests:
+                ## TODO: now just do the test runner.
+                st.write("## Running all Tests")
+                
+                running = 0
+                failed = 0
+                passed = 0
+                for workflow in workflows:
+                    running += 1
+                    test_workflow_file = os.path.join(ai_task_test_directory, workflow)
+                    test_workflow = prepareWorkflow(test_workflow_file)
+                    result = executeTest(test_workflow, test_result_column)
+                    if result == EXECUTE_RESULT_ASSERT_FAIL:
+                        failed += 1
+                    if result == EXECUTE_RESULT_ASSERT_SUCCESS:
+                        passed += 1
+                    
+                st.write("passed: **:green["+str(passed) + "]**  failed: **:red["+str(failed) + "]**  executed: **:blue["+str(running)+"]**")
             else:
                 st.write("## No Result")
         pass
