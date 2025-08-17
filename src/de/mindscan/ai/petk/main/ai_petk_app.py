@@ -591,6 +591,9 @@ def render_unittest_runner_tab(tab):
             run_all_tests = st.button("Run all tests")
         
         with test_result_column:
+            result_container = st.container()
+            log_container = st.container()
+            
             if run_test:
                 test_workflow_file = os.path.join(ai_task_test_directory, selected_test)
                 test_workflow = prepareWorkflow(test_workflow_file)
@@ -598,7 +601,8 @@ def render_unittest_runner_tab(tab):
                 
             elif run_all_tests:
                 ## TODO: now just do the test runner.
-                st.write("## Running all Tests")
+                with log_container:
+                    st.write("## Running all Tests")
                 
                 running = 0
                 failed = 0
@@ -607,13 +611,14 @@ def render_unittest_runner_tab(tab):
                     running += 1
                     test_workflow_file = os.path.join(ai_task_test_directory, workflow)
                     test_workflow = prepareWorkflow(test_workflow_file)
-                    result = executeTest(test_workflow, test_result_column)
+                    result = executeTest(test_workflow, log_container)
                     if result == EXECUTE_RESULT_ASSERT_FAIL:
                         failed += 1
                     if result == EXECUTE_RESULT_ASSERT_SUCCESS:
                         passed += 1
-                    
-                st.write("passed: **:green["+str(passed) + "]**  failed: **:red["+str(failed) + "]**  executed: **:blue["+str(running)+"]**")
+                with result_container:
+                    st.write("## Test-Results")
+                    st.write("passed: **:green["+str(passed) + "]**  &mdash;  failed: **:red["+str(failed) + "]**  &mdash;  executed: **:blue["+str(running)+"]**")
             else:
                 st.write("## No Result")
         pass
